@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  allowedDevOrigins: [
+    "local.emag.kptmangaluru.in",
+  ],
 };
 
 export default nextConfig;
