@@ -17,8 +17,8 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://sports.kptmangaluru.in",
-      "https://local.sports.kptmangaluru.in",
+      "https://emag.kptmangaluru.in",
+      "https://local.emag.kptmangaluru.in",
       "http://localhost:3000",
     ],
     credentials: true,
