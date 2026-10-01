@@ -17,13 +17,6 @@ import {
 
 const router = express.Router();
 
-
-/*
-=====================================================
-MULTER
-=====================================================
-*/
-
 const upload = multer({
   storage: multer.memoryStorage(),
 
@@ -49,12 +42,6 @@ const upload = multer({
 });
 
 
-/*
-=====================================================
-CREATE
-=====================================================
-*/
-
 router.post(
   "/",
   upload.fields([
@@ -71,23 +58,11 @@ router.post(
 );
 
 
-/*
-=====================================================
-MY CONTENT
-=====================================================
-*/
-
 router.get(
   "/my/:userId",
   getMyMagazineContents
 );
 
-
-/*
-=====================================================
-PUBLISHED
-=====================================================
-*/
 
 router.get(
   "/published",
@@ -95,56 +70,35 @@ router.get(
 );
 
 
-/*
-=====================================================
-PENDING
-=====================================================
-*/
-
 router.get(
   "/pending",
   getPendingMagazineContents
 );
 
 
-/*
-=====================================================
-ALL
-=====================================================
-*/
+router.get(
+  "/department/:userId",
+  getHODDepartmentMagazineContents
+);
+
+
+router.get(
+  "/hod/:userId",
+  getHODDepartmentMagazineContents
+);
+
 
 router.get(
   "/",
   getMagazineContents
 );
 
-router.get(
-  "/department/:userId",
-  getHODDepartmentMagazineContents
-);
-/*
-=====================================================
-SINGLE
-=====================================================
-*/
 
 router.get(
   "/:id",
   getMagazineContentById
 );
 
-
-/*
-=====================================================
-UPDATE
-=====================================================
-
-Can receive:
-
-studentPhoto
-eventPhoto
-=====================================================
-*/
 
 router.put(
   "/:id",
@@ -162,11 +116,21 @@ router.put(
 );
 
 
-/*
-=====================================================
-APPROVE
-=====================================================
-*/
+router.patch(
+  "/:id",
+  upload.fields([
+    {
+      name: "studentPhoto",
+      maxCount: 1,
+    },
+    {
+      name: "eventPhoto",
+      maxCount: 1,
+    },
+  ]),
+  updateMagazineContent
+);
+
 
 router.patch(
   "/:id/approve",
@@ -174,23 +138,11 @@ router.patch(
 );
 
 
-/*
-=====================================================
-REJECT
-=====================================================
-*/
-
 router.patch(
   "/:id/reject",
   rejectMagazineContent
 );
 
-
-/*
-=====================================================
-DELETE
-=====================================================
-*/
 
 router.delete(
   "/:id",

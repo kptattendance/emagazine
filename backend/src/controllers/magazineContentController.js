@@ -893,7 +893,46 @@ export const updateMagazineContent =
       const isStudent =
         user.role === "student";
 
+if (isHod) {
+  const hodDepartment = String(
+    user.department || ""
+  )
+    .trim()
+    .toUpperCase();
 
+  const contentDepartment = String(
+    content.department || ""
+  )
+    .trim()
+    .toUpperCase();
+
+  if (!hodDepartment) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Department is not assigned to this HOD.",
+    });
+  }
+
+  if (!contentDepartment) {
+    return res.status(400).json({
+      success: false,
+      message:
+        "Department is not assigned to this magazine content.",
+    });
+  }
+
+  if (
+    hodDepartment !==
+    contentDepartment
+  ) {
+    return res.status(403).json({
+      success: false,
+      message:
+        "You can edit only magazine content belonging to your department.",
+    });
+  }
+}
       /*
       -------------------------------------------------
       STUDENT CAN EDIT ONLY OWN CONTENT
@@ -1217,298 +1256,348 @@ export const updateMagazineContent =
   };
 
 
-/*
-=====================================================
-APPROVE
-=====================================================
-*/
+export const approveMagazineContent = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      approverId,
+    } = req.body;
 
-export const approveMagazineContent =
-  async (req, res) => {
-    try {
-      const {
-        approverId,
-      } = req.body;
+    if (!approverId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Approver ID is required.",
+      });
+    }
 
-      const approver =
-        await User.findById(
-          approverId
-        );
+    const approver =
+      await User.findById(
+        approverId
+      );
 
-      if (!approver) {
-        return res.status(404).json({
+    if (!approver) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Approver not found.",
+      });
+    }
+
+    const approverRole =
+      String(
+        approver.role || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    if (
+      !["hod", "admin"].includes(
+        approverRole
+      )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Only HOD or admin can approve content.",
+      });
+    }
+
+    const content =
+      await MagazineContent.findById(
+        req.params.id
+      );
+
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Magazine content not found.",
+      });
+    }
+
+    if (
+      content.status !== "pending"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Only pending content can be approved.",
+      });
+    }
+
+    if (
+      approverRole === "hod"
+    ) {
+      const hodDepartment =
+        String(
+          approver.department || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      const contentDepartment =
+        String(
+          content.department || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      if (!hodDepartment) {
+        return res.status(400).json({
           success: false,
           message:
-            "Approver not found.",
+            "Department is not assigned to this HOD.",
         });
       }
 
       if (
-        !["hod", "admin"].includes(
-          approver.role
-        )
+        !contentDepartment
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Department is not assigned to this magazine content.",
+        });
+      }
+
+      if (
+        hodDepartment !==
+        contentDepartment
       ) {
         return res.status(403).json({
           success: false,
           message:
-            "Only HOD or admin can approve content.",
+            "You can approve only magazine content belonging to your department.",
         });
       }
+    }
 
-      if (approverRole === "hod") {
-  const hodDepartment = String(
-    approver.department || ""
-  )
-    .trim()
-    .toUpperCase();
+    content.status =
+      "published";
 
-  const contentDepartment = String(
-    content.department || ""
-  )
-    .trim()
-    .toUpperCase();
+    content.approvedBy = {
+      name:
+        approver.name || "",
+      role:
+        approver.role || "",
+    };
 
-  if (!hodDepartment) {
-    return res.status(400).json({
+    content.approvedAt =
+      new Date();
+
+    content.rejectionReason =
+      "";
+
+    await content.save();
+
+    const result =
+      await MagazineContent.findById(
+        content._id
+      ).populate(
+        "activity",
+        "name order"
+      );
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Magazine content approved and published successfully.",
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "APPROVE MAGAZINE CONTENT ERROR:",
+      error
+    );
+
+    return res.status(500).json({
       success: false,
       message:
-        "Department is not assigned to this HOD.",
+        "Failed to approve magazine content.",
+      error: error.message,
     });
   }
+};
 
-  if (
-    !contentDepartment ||
-    hodDepartment !== contentDepartment
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You can approve only magazine content belonging to your department.",
-    });
-  }
-}
+export const rejectMagazineContent = async (
+  req,
+  res
+) => {
+  try {
+    const {
+      approverId,
+      rejectionReason,
+    } = req.body;
 
-      const content =
-        await MagazineContent.findById(
-          req.params.id
-        );
+    if (!approverId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Approver ID is required.",
+      });
+    }
 
-      if (!content) {
-        return res.status(404).json({
+    if (
+      !rejectionReason?.trim()
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Rejection reason is required.",
+      });
+    }
+
+    const approver =
+      await User.findById(
+        approverId
+      );
+
+    if (!approver) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Approver not found.",
+      });
+    }
+
+    const approverRole =
+      String(
+        approver.role || ""
+      )
+        .trim()
+        .toLowerCase();
+
+    if (
+      !["hod", "admin"].includes(
+        approverRole
+      )
+    ) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Only HOD or admin can reject content.",
+      });
+    }
+
+    const content =
+      await MagazineContent.findById(
+        req.params.id
+      );
+
+    if (!content) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Magazine content not found.",
+      });
+    }
+
+    if (
+      content.status !== "pending"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Only pending content can be rejected.",
+      });
+    }
+
+    if (
+      approverRole === "hod"
+    ) {
+      const hodDepartment =
+        String(
+          approver.department || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      const contentDepartment =
+        String(
+          content.department || ""
+        )
+          .trim()
+          .toUpperCase();
+
+      if (!hodDepartment) {
+        return res.status(400).json({
           success: false,
           message:
-            "Magazine content not found.",
+            "Department is not assigned to this HOD.",
         });
       }
 
-
       if (
-        content.status !== "pending"
+        !contentDepartment
       ) {
         return res.status(400).json({
           success: false,
           message:
-            "Only pending content can be approved.",
+            "Department is not assigned to this magazine content.",
         });
       }
-
-
-      content.status =
-        "published";
-
-      content.approvedBy = {
-        name:
-          approver.name || "",
-        role:
-          approver.role || "",
-      };
-
-      content.approvedAt =
-        new Date();
-
-      content.rejectionReason = "";
-
-      await content.save();
-
-
-      const result =
-        await MagazineContent.findById(
-          content._id
-        ).populate(
-          "activity",
-          "name order"
-        );
-
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "Magazine content approved and published successfully.",
-        data: result,
-      });
-    } catch (error) {
-      console.error(
-        "APPROVE MAGAZINE CONTENT ERROR:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Failed to approve magazine content.",
-        error: error.message,
-      });
-    }
-  };
-
-
-/*
-=====================================================
-REJECT
-=====================================================
-*/
-
-export const rejectMagazineContent =
-  async (req, res) => {
-    try {
-      const {
-        approverId,
-        rejectionReason,
-      } = req.body;
-
-
-      if (!rejectionReason?.trim()) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Rejection reason is required.",
-        });
-      }
-
-
-      const approver =
-        await User.findById(
-          approverId
-        );
-
-      if (!approver) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Approver not found.",
-        });
-      }
-
 
       if (
-        !["hod", "admin"].includes(
-          approver.role
-        )
+        hodDepartment !==
+        contentDepartment
       ) {
         return res.status(403).json({
           success: false,
           message:
-            "Only HOD or admin can reject content.",
+            "You can reject only magazine content belonging to your department.",
         });
       }
+    }
 
-if (approverRole === "hod") {
-  const hodDepartment = String(
-    approver.department || ""
-  )
-    .trim()
-    .toUpperCase();
+    content.status =
+      "rejected";
 
-  const contentDepartment = String(
-    content.department || ""
-  )
-    .trim()
-    .toUpperCase();
+    content.rejectionReason =
+      rejectionReason.trim();
 
-  if (!hodDepartment) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Department is not assigned to this HOD.",
-    });
-  }
+    content.approvedBy = {
+      name:
+        approver.name || "",
+      role:
+        approver.role || "",
+    };
 
-  if (
-    !contentDepartment ||
-    hodDepartment !== contentDepartment
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You can reject only magazine content belonging to your department.",
-    });
-  }
-}
-      const content =
-        await MagazineContent.findById(
-          req.params.id
-        );
+    content.approvedAt =
+      new Date();
 
-      if (!content) {
-        return res.status(404).json({
-          success: false,
-          message:
-            "Magazine content not found.",
-        });
-      }
+    await content.save();
 
-
-      if (
-        content.status !== "pending"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Only pending content can be rejected.",
-        });
-      }
-
-
-      content.status =
-        "rejected";
-
-      content.rejectionReason =
-        rejectionReason.trim();
-
-      content.approvedBy = {
-        name:
-          approver.name || "",
-        role:
-          approver.role || "",
-      };
-
-      content.approvedAt =
-        new Date();
-
-
-      await content.save();
-
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "Magazine content rejected successfully.",
-        data: content,
-      });
-    } catch (error) {
-      console.error(
-        "REJECT MAGAZINE CONTENT ERROR:",
-        error
+    const result =
+      await MagazineContent.findById(
+        content._id
+      ).populate(
+        "activity",
+        "name order"
       );
 
-      return res.status(500).json({
-        success: false,
-        message:
-          "Failed to reject magazine content.",
-        error: error.message,
-      });
-    }
-  };
+    return res.status(200).json({
+      success: true,
+      message:
+        "Magazine content rejected successfully.",
+      data: result,
+    });
+  } catch (error) {
+    console.error(
+      "REJECT MAGAZINE CONTENT ERROR:",
+      error
+    );
+
+    return res.status(500).json({
+      success: false,
+      message:
+        "Failed to reject magazine content.",
+      error: error.message,
+    });
+  }
+};
 
 // =====================================================
 // DELETE MAGAZINE CONTENT
