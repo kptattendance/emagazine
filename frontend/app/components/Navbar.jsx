@@ -118,7 +118,7 @@ export default function Navbar() {
             break;
 
           case "student":
-            setDashboardUrl("/student");
+            setDashboardUrl("/student/magazine");
             break;
 
           default:

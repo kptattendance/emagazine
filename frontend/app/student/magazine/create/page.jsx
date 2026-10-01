@@ -872,23 +872,65 @@ useEffect(() => {
 
               {/* DEPARTMENT */}
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Department
-                  <span className="text-red-500">
-                    {" "}*
-                  </span>
-                </label>
+            <div>
+  <label className="mb-2 block text-sm font-medium text-slate-700">
+    Department
+    <span className="text-red-500">
+      {" "}*
+    </span>
+  </label>
 
-                <input
-                  type="text"
-                  name="department"
-                  value={form.department}
-                  onChange={handleChange}
-                  placeholder="Example: Computer Science & Engineering"
-                  className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
-                />
-              </div>
+  <select
+    name="department"
+    value={form.department}
+    onChange={handleChange}
+    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
+  >
+    <option value="">
+      Select department
+    </option>
+
+    <option value="AT">
+      Automobile Engineering
+    </option>
+
+    <option value="CE">
+      Civil Engineering
+    </option>
+
+    <option value="ME">
+      Mechanical Engineering
+    </option>
+
+    <option value="EE">
+      Electrical & Electronics Engineering
+    </option>
+
+    <option value="CH">
+      Chemical Engineering
+    </option>
+
+    <option value="PS">
+      Polymer Technology
+    </option>
+
+    <option value="EC">
+      Electronics & Communication Engineering
+    </option>
+
+    <option value="CS">
+      Computer Science & Engineering
+    </option>
+
+    <option value="SC">
+      Science
+    </option>
+
+    <option value="IN">
+      Institute
+    </option>
+  </select>
+</div>
 
 
               {/* SEMESTER */}
