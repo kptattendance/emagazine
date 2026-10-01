@@ -21,18 +21,12 @@ import {
   useState,
 } from "react";
 
-import { useSearchParams } from "next/navigation";
-
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
 export default function MagazinePage() {
-  const searchParams =
-    useSearchParams();
-
-  const selectedIssue =
-    searchParams.get("month") ||
-    "all";
+  const [selectedIssue, setSelectedIssue] =
+    useState("all");
 
   const [articles, setArticles] =
     useState([]);
@@ -54,6 +48,19 @@ export default function MagazinePage() {
 
   const [selectedArticle, setSelectedArticle] =
     useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(
+      window.location.search
+    );
+
+    const month =
+      params.get("month");
+
+    if (month) {
+      setSelectedIssue(month);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -194,8 +201,7 @@ export default function MagazinePage() {
   const issueArticles =
     useMemo(() => {
       if (
-        selectedIssue ===
-        "all"
+        selectedIssue === "all"
       ) {
         return normalizedArticles;
       }
@@ -212,6 +218,12 @@ export default function MagazinePage() {
 
   const issueInfo =
     useMemo(() => {
+      if (
+        selectedIssue === "all"
+      ) {
+        return null;
+      }
+
       const article =
         issueArticles.find(
           (item) =>
@@ -294,7 +306,6 @@ export default function MagazinePage() {
 
       return issueArticles.filter(
         (article) => {
-
           if (
             department !==
               "all" &&
@@ -383,15 +394,13 @@ export default function MagazinePage() {
   return (
     <main className="min-h-screen bg-[#f7faf9] text-slate-800">
 
-      {/* HEADER */}
-
       <section className="border-b border-slate-200 bg-white">
 
         <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6">
 
           <Link
             href="/#archive"
-            className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 hover:text-teal-800"
+            className="inline-flex items-center gap-2 text-sm font-bold text-teal-700 transition hover:text-teal-800"
           >
             <ArrowLeft size={16} />
             Back to Magazine Archive
@@ -426,15 +435,12 @@ export default function MagazinePage() {
             </div>
 
             <div className="rounded-xl border border-teal-100 bg-teal-50 px-4 py-3 text-sm font-bold text-teal-800">
-
-              {filteredArticles.length}
-              {" "}
+              {filteredArticles.length}{" "}
               Article
               {filteredArticles.length ===
               1
                 ? ""
                 : "s"}
-
             </div>
 
           </div>
@@ -443,11 +449,7 @@ export default function MagazinePage() {
 
       </section>
 
-      {/* CONTENT */}
-
       <section className="mx-auto max-w-7xl px-5 py-8 sm:px-6">
-
-        {/* FILTERS */}
 
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_auto]">
 
@@ -554,7 +556,7 @@ export default function MagazinePage() {
               onClick={
                 clearFilters
               }
-              className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
+              className="h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-600 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-700"
             >
               Clear
             </button>
@@ -562,12 +564,12 @@ export default function MagazinePage() {
 
         </div>
 
-        {/* ARTICLES */}
-
         {loading ? (
           <div className="mt-8 rounded-3xl border border-slate-200 bg-white px-6 py-16 text-center">
 
-            <p className="text-sm text-slate-500">
+            <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-slate-200 border-t-teal-700" />
+
+            <p className="mt-4 text-sm text-slate-500">
               Loading magazine...
             </p>
 
@@ -751,7 +753,7 @@ function ArticleCard({
         <button
           type="button"
           onClick={onRead}
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 hover:text-teal-800"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-bold text-teal-700 transition hover:text-teal-800"
         >
           Read article
           <ArrowRight size={15} />
@@ -815,7 +817,7 @@ function ArticleModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg hover:bg-red-50 hover:text-red-600"
+          className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-slate-700 shadow-lg transition hover:bg-red-50 hover:text-red-600"
         >
           <X size={20} />
         </button>
@@ -858,7 +860,7 @@ function ArticleModal({
               )}
             </p>
 
-            <h2 className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
+            <h2 className="mt-2 text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
               {article.title}
             </h2>
 
@@ -1062,10 +1064,13 @@ function getOrdinal(number) {
   switch (n % 10) {
     case 1:
       return "st";
+
     case 2:
       return "nd";
+
     case 3:
       return "rd";
+
     default:
       return "th";
   }
