@@ -25,19 +25,29 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
-  const [dashboardUrl, setDashboardUrl] = useState("/auth/check");
+  const [dashboardUrl, setDashboardUrl] =
+    useState("/auth/check");
 
-  const { isLoaded, isSignedIn, getToken } = useAuth();
+  const {
+    isLoaded,
+    isSignedIn,
+    getToken,
+  } = useAuth();
+
   const { user } = useUser();
 
-  // ============================================================
-  // DETERMINE DASHBOARD
-  // ============================================================
+  /*
+  ============================================================
+  DETERMINE DASHBOARD
+  ============================================================
+  */
 
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user) {
       return;
     }
+
+    let cancelled = false;
 
     const determineDashboard = async () => {
       try {
@@ -47,16 +57,10 @@ export default function Navbar() {
 
         const token = await getToken();
 
-        console.log(
-          "Navbar Clerk token:",
-          token ? "YES" : "NO"
-        );
-
         if (!token) {
-          console.error(
-            "Navbar: Clerk token unavailable."
+          console.log(
+            "Navbar: Clerk token not available yet."
           );
-
           return;
         }
 
@@ -69,6 +73,8 @@ export default function Navbar() {
           }
         );
 
+        if (cancelled) return;
+
         console.log(
           "Navbar user response:",
           response.data
@@ -79,7 +85,11 @@ export default function Navbar() {
           response.data?.user ||
           response.data;
 
-        const role = userData?.role;
+        const role = String(
+          userData?.role || ""
+        )
+          .trim()
+          .toLowerCase();
 
         console.log(
           "Navbar detected role:",
@@ -91,12 +101,20 @@ export default function Navbar() {
             setDashboardUrl("/admin");
             break;
 
-          case "sports_officer":
-            setDashboardUrl("/sports-officer");
+          case "hod":
+            setDashboardUrl("/hod");
             break;
 
-          case "college_coordinator":
-            setDashboardUrl("/college");
+          case "principal":
+            setDashboardUrl("/principal");
+            break;
+
+          case "staff":
+            setDashboardUrl("/staff");
+            break;
+
+          case "mag_coordinator":
+            setDashboardUrl("/magazine");
             break;
 
           case "student":
@@ -105,8 +123,36 @@ export default function Navbar() {
 
           default:
             setDashboardUrl("/auth/check");
+            break;
         }
       } catch (error) {
+        if (cancelled) return;
+
+        const status =
+          error.response?.status;
+
+        /*
+        ------------------------------------------------------
+        IMPORTANT:
+        On first login, the Mongo User may not exist yet.
+
+        /auth/check is responsible for creating the
+        Mongo User.
+
+        Therefore, don't show this expected 404
+        as a console error.
+        ------------------------------------------------------
+        */
+
+        if (status === 404) {
+          console.log(
+            "Navbar: Mongo user not created yet. Auth check will handle it."
+          );
+
+          setDashboardUrl("/auth/check");
+          return;
+        }
+
         console.error(
           "Failed to determine dashboard:",
           error
@@ -114,7 +160,7 @@ export default function Navbar() {
 
         console.error(
           "Navbar status:",
-          error.response?.status
+          status
         );
 
         console.error(
@@ -127,6 +173,10 @@ export default function Navbar() {
     };
 
     determineDashboard();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     isLoaded,
     isSignedIn,
@@ -134,14 +184,21 @@ export default function Navbar() {
     getToken,
   ]);
 
+
+  /*
+  ============================================================
+  NAVBAR
+  ============================================================
+  */
+
   return (
     <header className="sticky top-0 z-50 border-b border-teal-100 bg-white/95 backdrop-blur">
 
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-6">
 
-        {/* ======================================================
+        {/* ==================================================
             LOGO
-        ====================================================== */}
+        ================================================== */}
 
         <Link
           href="/"
@@ -162,9 +219,10 @@ export default function Navbar() {
           </div>
         </Link>
 
-        {/* ======================================================
+
+        {/* ==================================================
             DESKTOP NAVIGATION
-        ====================================================== */}
+        ================================================== */}
 
         <nav className="hidden items-center gap-1 md:flex">
 
@@ -176,30 +234,12 @@ export default function Navbar() {
             Home
           </Link>
 
-          <Link
-            href="/#latest"
-            className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-teal-700"
-          >
-            Latest Activities
-          </Link>
+        
 
-          <Link
-            href="/#departments"
-            className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-teal-700"
-          >
-            Departments
-          </Link>
 
-          <Link
-            href="/#achievements"
-            className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-teal-50 hover:text-teal-700"
-          >
-            Achievements
-          </Link>
-
-          {/* ====================================================
+          {/* =================================================
               DASHBOARD
-          ==================================================== */}
+          ================================================= */}
 
           <Show when="signed-in">
             <Link
@@ -213,9 +253,10 @@ export default function Navbar() {
 
         </nav>
 
-        {/* ======================================================
-            DESKTOP LOGIN
-        ====================================================== */}
+
+        {/* ==================================================
+            DESKTOP LOGIN / USER
+        ================================================== */}
 
         <div className="hidden items-center gap-3 md:flex">
 
@@ -236,14 +277,17 @@ export default function Navbar() {
 
         </div>
 
-        {/* ======================================================
+
+        {/* ==================================================
             MOBILE MENU BUTTON
-        ====================================================== */}
+        ================================================== */}
 
         <button
           type="button"
           onClick={() =>
-            setMobileMenu((value) => !value)
+            setMobileMenu(
+              (value) => !value
+            )
           }
           className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 md:hidden"
           aria-label="Toggle menu"
@@ -257,16 +301,17 @@ export default function Navbar() {
 
       </div>
 
-      {/* ========================================================
+
+      {/* ====================================================
           MOBILE MENU
-      ======================================================== */}
+      ==================================================== */}
 
       {mobileMenu && (
         <div className="border-t border-teal-100 bg-white px-5 py-4 md:hidden">
 
           <div className="flex flex-col gap-1">
 
-            <Link
+            {/* <Link
               href="/"
               onClick={() =>
                 setMobileMenu(false)
@@ -275,37 +320,14 @@ export default function Navbar() {
             >
               <Home size={16} />
               Home
-            </Link>
+            </Link> */}
 
-            <Link
-              href="/#latest"
-              onClick={() =>
-                setMobileMenu(false)
-              }
-              className="rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700"
-            >
-              Latest Activities
-            </Link>
+         
 
-            <Link
-              href="/#departments"
-              onClick={() =>
-                setMobileMenu(false)
-              }
-              className="rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700"
-            >
-              Departments
-            </Link>
 
-            <Link
-              href="/#achievements"
-              onClick={() =>
-                setMobileMenu(false)
-              }
-              className="rounded-xl px-3 py-3 text-sm font-semibold text-slate-700 hover:bg-teal-50 hover:text-teal-700"
-            >
-              Achievements
-            </Link>
+            {/* =================================================
+                MOBILE DASHBOARD
+            ================================================= */}
 
             <Show when="signed-in">
               <Link
@@ -319,6 +341,11 @@ export default function Navbar() {
                 Dashboard
               </Link>
             </Show>
+
+
+            {/* =================================================
+                ACCOUNT
+            ================================================= */}
 
             <div className="mt-3 border-t border-slate-100 pt-3">
 

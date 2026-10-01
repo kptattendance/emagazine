@@ -29,7 +29,7 @@ const menuItems = [
   },
   {
     title: "Activities",
-    href: "/admin/activities",
+    href: "/admin/activity",
     icon: CalendarDays,
   },
   {
@@ -38,39 +38,9 @@ const menuItems = [
     icon: Newspaper,
   },
   {
-    title: "Departments",
-    href: "/admin/departments",
-    icon: Building2,
-  },
-  {
-    title: "Students",
-    href: "/admin/students",
-    icon: GraduationCap,
-  },
-  {
     title: "Users",
     href: "/admin/users",
     icon: Users,
-  },
-  {
-    title: "Media",
-    href: "/admin/media",
-    icon: Image,
-  },
-  {
-    title: "Achievements",
-    href: "/admin/achievements",
-    icon: Trophy,
-  },
-  {
-    title: "Reports",
-    href: "/admin/reports",
-    icon: FileText,
-  },
-  {
-    title: "Settings",
-    href: "/admin/settings",
-    icon: Settings,
   },
 ];
 

@@ -1,28 +1,35 @@
 import User from "../models/User.js";
 import { clerkClient } from "@clerk/express";
 
-// =====================================================
-// ROLES
-// =====================================================
-
-// Roles that can be created from Admin → Users
 const ADMIN_CREATED_ROLES = [
   "admin",
-  "sports_officer",
-  "college_coordinator",
+  "hod",
+  "principal",
+  "staff",
+  "mag_coordinator",
 ];
 
-// All roles existing in the application
 const ALL_ROLES = [
   "admin",
-  "sports_officer",
-  "college_coordinator",
+  "hod",
+  "principal",
+  "staff",
+  "mag_coordinator",
   "student",
 ];
 
-// =====================================================
-// HELPERS
-// =====================================================
+const DEPARTMENTS = [
+  "AE",
+  "CE",
+  "ME",
+  "EE",
+  "CH",
+  "PT",
+  "EC",
+  "CS",
+  "SC",
+  "IN",
+];
 
 const splitName = (fullName = "") => {
   const parts = fullName.trim().split(/\s+/);
@@ -40,21 +47,6 @@ const splitName = (fullName = "") => {
   };
 };
 
-// =====================================================
-// CREATE USER
-//
-// Creates:
-// 1. Clerk account
-// 2. MongoDB User
-//
-// Used for:
-// Admin
-// Sports Officer
-// College Coordinator
-//
-// Students should use /api/students/admin-create
-// =====================================================
-
 export const createUser = async (req, res) => {
   let clerkUser = null;
   let mongoUser = null;
@@ -65,12 +57,9 @@ export const createUser = async (req, res) => {
       email,
       phone,
       role,
+      department,
       isActive = true,
     } = req.body;
-
-    // =================================================
-    // VALIDATION
-    // =================================================
 
     if (!name?.trim()) {
       return res.status(400).json({
@@ -93,9 +82,12 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // =================================================
-    // ONLY ALLOW NON-STUDENT ROLES HERE
-    // =================================================
+    if (!department || !DEPARTMENTS.includes(department)) {
+      return res.status(400).json({
+        success: false,
+        message: "Valid department is required.",
+      });
+    }
 
     if (!ADMIN_CREATED_ROLES.includes(role)) {
       return res.status(400).json({
@@ -105,19 +97,10 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // =================================================
-    // CLEAN DATA
-    // =================================================
-
     const cleanName = name.trim();
-
     const cleanEmail = email.trim().toLowerCase();
-
     const cleanPhone = phone?.trim() || "";
-
-    // =================================================
-    // CHECK MONGODB EMAIL
-    // =================================================
+    const cleanDepartment = department.trim();
 
     const existingMongoUser = await User.findOne({
       email: cleanEmail,
@@ -131,88 +114,49 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // =================================================
-    // SPLIT NAME
-    // =================================================
-
     const { firstName, lastName } = splitName(cleanName);
-
-    // =================================================
-    // CREATE CLERK USER
-    //
-    // NO PASSWORD REQUIRED
-    // =================================================
 
     const clerkCreateData = {
       emailAddress: [cleanEmail],
-
       firstName,
-
       lastName,
-
-      // Allows Clerk user creation without password
+      publicMetadata: {
+        role: role,
+      },
       skipPasswordRequirement: true,
     };
 
-   
-
-    // If admin creates inactive user,
-    // prevent that user from logging in.
     if (!isActive) {
       clerkCreateData.banned = true;
     }
-
-  
 
     clerkUser = await clerkClient.users.createUser(
       clerkCreateData
     );
 
-
-    // =================================================
-    // CREATE MONGODB USER
-    // =================================================
-
     mongoUser = await User.create({
       clerkUserId: clerkUser.id,
-
       name: cleanName,
-
       email: cleanEmail,
-
       phone: cleanPhone,
-
       role,
-
+      department: cleanDepartment,
       isActive: Boolean(isActive),
     });
 
-    // =================================================
-    // SUCCESS
-    // =================================================
-
     return res.status(201).json({
       success: true,
-
       message:
         "User created successfully in Clerk and MongoDB.",
-
       data: {
         _id: mongoUser._id,
-
-        clerkUserId:
-          mongoUser.clerkUserId,
-
+        clerkUserId: mongoUser.clerkUserId,
         name: mongoUser.name,
-
         email: mongoUser.email,
-
         phone: mongoUser.phone,
-
         role: mongoUser.role,
-
-        isActive:
-          mongoUser.isActive,
+        department: mongoUser.department,
+        isActive: mongoUser.isActive,
       },
     });
   } catch (error) {
@@ -220,13 +164,6 @@ export const createUser = async (req, res) => {
       "CREATE USER ERROR:",
       error
     );
-
-    // =================================================
-    // ROLLBACK CLERK
-    //
-    // If Clerk account was created but MongoDB
-    // creation failed, remove the Clerk account.
-    // =================================================
 
     if (
       clerkUser?.id &&
@@ -236,8 +173,6 @@ export const createUser = async (req, res) => {
         await clerkClient.users.deleteUser(
           clerkUser.id
         );
-
-      
       } catch (rollbackError) {
         console.error(
           "CLERK ROLLBACK ERROR:",
@@ -245,10 +180,6 @@ export const createUser = async (req, res) => {
         );
       }
     }
-
-    // =================================================
-    // CLERK ERROR
-    // =================================================
 
     if (error?.errors?.length) {
       const clerkError =
@@ -261,7 +192,6 @@ export const createUser = async (req, res) => {
 
       return res.status(400).json({
         success: false,
-
         message:
           clerkError?.longMessage ||
           clerkError?.message ||
@@ -269,52 +199,34 @@ export const createUser = async (req, res) => {
       });
     }
 
-    // =================================================
-    // MONGODB DUPLICATE
-    // =================================================
-
     if (error?.code === 11000) {
       const duplicateField =
         Object.keys(error.keyPattern || {})[0];
 
       return res.status(409).json({
         success: false,
-
         message: duplicateField
           ? `A user with the same ${duplicateField} already exists.`
           : "A user with the same information already exists.",
       });
     }
 
-    // =================================================
-    // OTHER ERROR
-    // =================================================
-
     return res.status(500).json({
       success: false,
-
       message:
         "Failed to create user.",
-
       error: error.message,
     });
   }
 };
-
-// =====================================================
-// CREATE MY USER
-//
-// Used when a user already exists in Clerk
-// and needs a MongoDB application user.
-//
-// Normally used for self-signup.
-// =====================================================
 
 export const createMyUser = async (
   req,
   res
 ) => {
   try {
+    const { department } = req.body;
+
     const clerkUserId =
       req.clerkUserId;
 
@@ -325,10 +237,6 @@ export const createMyUser = async (
           "Clerk authentication required.",
       });
     }
-
-    // =================================================
-    // CHECK EXISTING MONGO USER
-    // =================================================
 
     const existingUser =
       await User.findOne({
@@ -343,10 +251,6 @@ export const createMyUser = async (
         data: existingUser,
       });
     }
-
-    // =================================================
-    // GET USER FROM CLERK
-    // =================================================
 
     const clerkUser =
       await clerkClient.users.getUser(
@@ -393,32 +297,26 @@ export const createMyUser = async (
       });
     }
 
-    // =================================================
-    // CREATE MONGO USER
-    // =================================================
-
     const mongoUser =
       await User.create({
         clerkUserId,
-
         name,
-
         email:
           email.toLowerCase(),
-
         phone,
-
         role: "student",
-
+        department:
+          department &&
+          DEPARTMENTS.includes(department)
+            ? department
+            : undefined,
         isActive: true,
       });
 
     return res.status(201).json({
       success: true,
-
       message:
         "Application user created successfully.",
-
       data: mongoUser,
     });
   } catch (error) {
@@ -443,10 +341,6 @@ export const createMyUser = async (
     });
   }
 };
-
-// =====================================================
-// GET MY USER
-// =====================================================
 
 export const getMyUser = async (
   req,
@@ -494,10 +388,6 @@ export const getMyUser = async (
   }
 };
 
-// =====================================================
-// GET ALL USERS
-// =====================================================
-
 export const getAllUsers = async (
   req,
   res
@@ -528,10 +418,6 @@ export const getAllUsers = async (
 
     const query = {};
 
-    // =================================================
-    // SEARCH
-    // =================================================
-
     if (search.trim()) {
       const regex =
         new RegExp(
@@ -555,20 +441,12 @@ export const getAllUsers = async (
       ];
     }
 
-    // =================================================
-    // ROLE
-    // =================================================
-
     if (
       role &&
       ALL_ROLES.includes(role)
     ) {
       query.role = role;
     }
-
-    // =================================================
-    // STATUS
-    // =================================================
 
     if (isActive === "true") {
       query.isActive = true;
@@ -608,9 +486,7 @@ export const getAllUsers = async (
 
     return res.status(200).json({
       success: true,
-
       data: users,
-
       pagination: {
         page: currentPage,
         limit: currentLimit,
@@ -632,10 +508,6 @@ export const getAllUsers = async (
     });
   }
 };
-
-// =====================================================
-// GET USER BY ID
-// =====================================================
 
 export const getUserById = async (
   req,
@@ -673,12 +545,6 @@ export const getUserById = async (
     });
   }
 };
-
-// =====================================================
-// UPDATE MY USER
-//
-// User can update own name and phone.
-// =====================================================
 
 export const updateMyUser = async (
   req,
@@ -724,10 +590,6 @@ export const updateMyUser = async (
 
     await user.save();
 
-    // =================================================
-    // SYNC NAME WITH CLERK
-    // =================================================
-
     if (name !== undefined) {
       const {
         firstName,
@@ -766,51 +628,24 @@ export const updateMyUser = async (
   }
 };
 
-// =====================================================
-// UPDATE USER
-//
-// Admin / Sports Officer can update users
-// according to route permissions.
-//
-// Supports:
-// name
-// email
-// phone
-// password
-// role
-// isActive
-// =====================================================
-
-export const updateUser = async (
-  req,
-  res
-) => {
+export const updateUser = async (req, res) => {
   try {
-    const user =
-      await User.findById(
-        req.params.id
-      );
+    const user = await User.findById(req.params.id);
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message:
-          "User not found.",
+        message: "User not found.",
       });
     }
 
     const {
       name,
-      email,
       phone,
       role,
-      password,
+      department,
       isActive,
     } = req.body;
-
-    // =================================================
-    // ROLE VALIDATION
-    // =================================================
 
     if (
       role !== undefined &&
@@ -818,14 +653,19 @@ export const updateUser = async (
     ) {
       return res.status(400).json({
         success: false,
-        message:
-          "Invalid role.",
+        message: "Invalid role.",
       });
     }
 
-    // =================================================
-    // LAST ADMIN PROTECTION
-    // =================================================
+    if (
+      department !== undefined &&
+      !DEPARTMENTS.includes(department)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid department.",
+      });
+    }
 
     if (
       user.role === "admin" &&
@@ -866,175 +706,40 @@ export const updateUser = async (
       }
     }
 
-    // =================================================
-    // EMAIL DUPLICATE CHECK
-    // =================================================
-
-    if (email !== undefined) {
-      const cleanEmail =
-        email.trim().toLowerCase();
-
-      const duplicate =
-        await User.findOne({
-          email: cleanEmail,
-          _id: {
-            $ne: user._id,
-          },
-        });
-
-      if (duplicate) {
-        return res.status(409).json({
-          success: false,
-          message:
-            "Another user already uses this email.",
-        });
-      }
-    }
-
-    // =================================================
-    // PHONE DUPLICATE CHECK
-    // =================================================
-
-    if (phone !== undefined) {
-      const cleanPhone =
-        phone.trim();
-
-      if (cleanPhone) {
-        const duplicatePhone =
-          await User.findOne({
-            phone: cleanPhone,
-            _id: {
-              $ne: user._id,
-            },
-          });
-
-        if (duplicatePhone) {
-          return res.status(409).json({
-            success: false,
-            message:
-              "Another user already uses this phone number.",
-          });
-        }
-      }
-    }
-
-    // =================================================
-    // UPDATE CLERK
-    // =================================================
-
-    const clerkUpdate = {};
-
     if (name !== undefined) {
-      if (!name.trim()) {
+      const cleanName = String(name).trim();
+
+      if (!cleanName) {
         return res.status(400).json({
           success: false,
-          message:
-            "Name cannot be empty.",
+          message: "Name cannot be empty.",
         });
       }
 
-      const {
-        firstName,
-        lastName,
-      } = splitName(
-        name.trim()
-      );
-
-      clerkUpdate.firstName =
-        firstName;
-
-      clerkUpdate.lastName =
-        lastName;
-    }
-
-    // =================================================
-    // OPTIONAL PASSWORD UPDATE
-    //
-    // Password is NOT required.
-    // If supplied during editing, it is changed.
-    // =================================================
-
-    if (password) {
-      if (password.length < 8) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Password must be at least 8 characters.",
-        });
-      }
-
-      clerkUpdate.password =
-        password;
-
-      clerkUpdate.signOutOfOtherSessions =
-        true;
-    }
-
-    // =================================================
-    // UPDATE CLERK
-    // =================================================
-
-    if (
-      Object.keys(
-        clerkUpdate
-      ).length > 0
-    ) {
-      await clerkClient.users.updateUser(
-        user.clerkUserId,
-        clerkUpdate
-      );
-    }
-
-    // =================================================
-    // UPDATE MONGO USER
-    // =================================================
-
-    if (name !== undefined) {
-      user.name =
-        name.trim();
-    }
-
-    if (email !== undefined) {
-      user.email =
-        email.trim().toLowerCase();
+      user.name = cleanName;
     }
 
     if (phone !== undefined) {
-      user.phone =
-        phone.trim();
+      user.phone = String(phone).trim();
     }
 
     if (role !== undefined) {
       user.role = role;
     }
 
+    if (department !== undefined) {
+      user.department = department;
+    }
+
     if (isActive !== undefined) {
-      user.isActive =
-        Boolean(isActive);
+      user.isActive = Boolean(isActive);
     }
 
     await user.save();
 
-    // =================================================
-    // SYNC ACTIVE STATUS WITH CLERK
-    // =================================================
-
-    if (isActive !== undefined) {
-      if (isActive) {
-        await clerkClient.users.unbanUser(
-          user.clerkUserId
-        );
-      } else {
-        await clerkClient.users.banUser(
-          user.clerkUserId
-        );
-      }
-    }
-
     return res.status(200).json({
       success: true,
-      message:
-        "User updated successfully.",
+      message: "User details updated successfully.",
       data: user,
     });
   } catch (error) {
@@ -1043,19 +748,11 @@ export const updateUser = async (
       error
     );
 
-    if (error?.errors?.length) {
-      return res.status(400).json({
-        success: false,
-        message:
-          error.errors[0]?.longMessage ||
-          error.errors[0]?.message ||
-          "Clerk update failed.",
-      });
-    }
-
     if (error?.code === 11000) {
       const duplicateField =
-        Object.keys(error.keyPattern || {})[0];
+        Object.keys(
+          error.keyPattern || {}
+        )[0];
 
       return res.status(409).json({
         success: false,
@@ -1067,16 +764,11 @@ export const updateUser = async (
 
     return res.status(500).json({
       success: false,
-      message:
-        "Failed to update user.",
+      message: "Failed to update user.",
       error: error.message,
     });
   }
 };
-
-// =====================================================
-// UPDATE USER ROLE
-// =====================================================
 
 export const updateUserRole = async (
   req,
@@ -1107,10 +799,6 @@ export const updateUserRole = async (
           "User not found.",
       });
     }
-
-    // =================================================
-    // LAST ADMIN PROTECTION
-    // =================================================
 
     if (
       user.role === "admin" &&
@@ -1156,10 +844,6 @@ export const updateUserRole = async (
   }
 };
 
-// =====================================================
-// TOGGLE USER STATUS
-// =====================================================
-
 export const toggleUserStatus = async (
   req,
   res
@@ -1178,10 +862,6 @@ export const toggleUserStatus = async (
       });
     }
 
-    // =================================================
-    // PREVENT SELF DEACTIVATION
-    // =================================================
-
     if (
       req.user &&
       String(user._id) ===
@@ -1196,10 +876,6 @@ export const toggleUserStatus = async (
 
     const newStatus =
       !user.isActive;
-
-    // =================================================
-    // LAST ADMIN PROTECTION
-    // =================================================
 
     if (
       user.role === "admin" &&
@@ -1225,10 +901,6 @@ export const toggleUserStatus = async (
       newStatus;
 
     await user.save();
-
-    // =================================================
-    // SYNC WITH CLERK
-    // =================================================
 
     if (newStatus) {
       await clerkClient.users.unbanUser(
@@ -1261,17 +933,6 @@ export const toggleUserStatus = async (
     });
   }
 };
-// =====================================================
-// DELETE USER
-//
-// PERMANENT DELETE:
-// 1. Delete user from Clerk
-// 2. Delete user from MongoDB
-//
-// IMPORTANT:
-// - Cannot delete own account
-// - Cannot delete the last active admin
-// =====================================================
 
 export const deleteUser = async (req, res) => {
   try {
@@ -1284,10 +945,6 @@ export const deleteUser = async (req, res) => {
       });
     }
 
-    // =================================================
-    // PREVENT SELF DELETE
-    // =================================================
-
     if (
       req.user &&
       String(user._id) === String(req.user._id)
@@ -1297,10 +954,6 @@ export const deleteUser = async (req, res) => {
         message: "You cannot delete your own account.",
       });
     }
-
-    // =================================================
-    // LAST ADMIN PROTECTION
-    // =================================================
 
     if (user.role === "admin" && user.isActive) {
       const adminCount = await User.countDocuments({
@@ -1317,10 +970,6 @@ export const deleteUser = async (req, res) => {
       }
     }
 
-    // =================================================
-    // DELETE FROM CLERK
-    // =================================================
-
     if (user.clerkUserId) {
       try {
         await clerkClient.users.deleteUser(
@@ -1332,8 +981,6 @@ export const deleteUser = async (req, res) => {
           clerkError
         );
 
-        // If Clerk user is already deleted,
-        // continue with MongoDB deletion.
         const clerkStatus =
           clerkError?.status ||
           clerkError?.statusCode;
@@ -1348,15 +995,7 @@ export const deleteUser = async (req, res) => {
       }
     }
 
-    // =================================================
-    // DELETE FROM MONGODB
-    // =================================================
-
     await User.findByIdAndDelete(user._id);
-
-    // =================================================
-    // SUCCESS
-    // =================================================
 
     return res.status(200).json({
       success: true,
@@ -1367,7 +1006,6 @@ export const deleteUser = async (req, res) => {
         clerkUserId: user.clerkUserId,
       },
     });
-
   } catch (error) {
     console.error(
       "DELETE USER ERROR:",
@@ -1382,27 +1020,9 @@ export const deleteUser = async (req, res) => {
   }
 };
 
-
-// =====================================================
-// DELETE MULTIPLE USERS
-//
-// Deletes users from:
-// 1. Clerk
-// 2. MongoDB
-//
-// Body:
-// {
-//   userIds: ["mongoId1", "mongoId2"]
-// }
-// =====================================================
-
 export const deleteMultipleUsers = async (req, res) => {
   try {
     const { userIds } = req.body;
-
-    // =================================================
-    // VALIDATION
-    // =================================================
 
     if (!Array.isArray(userIds) || userIds.length === 0) {
       return res.status(400).json({
@@ -1411,16 +1031,11 @@ export const deleteMultipleUsers = async (req, res) => {
       });
     }
 
-    // Remove duplicate IDs
     const uniqueUserIds = [
       ...new Set(
         userIds.map((id) => String(id))
       ),
     ];
-
-    // =================================================
-    // GET USERS
-    // =================================================
 
     const users = await User.find({
       _id: { $in: uniqueUserIds },
@@ -1432,10 +1047,6 @@ export const deleteMultipleUsers = async (req, res) => {
         message: "No users found.",
       });
     }
-
-    // =================================================
-    // PREVENT SELF DELETE
-    // =================================================
 
     const currentUserId =
       req.user?._id
@@ -1454,10 +1065,6 @@ export const deleteMultipleUsers = async (req, res) => {
           "You cannot delete your own account. Remove yourself from the selection.",
       });
     }
-
-    // =================================================
-    // LAST ADMIN PROTECTION
-    // =================================================
 
     const selectedActiveAdmins = users.filter(
       (user) =>
@@ -1485,10 +1092,6 @@ export const deleteMultipleUsers = async (req, res) => {
       }
     }
 
-    // =================================================
-    // DELETE FROM CLERK
-    // =================================================
-
     const clerkErrors = [];
 
     for (const user of users) {
@@ -1505,7 +1108,6 @@ export const deleteMultipleUsers = async (req, res) => {
           clerkError?.status ||
           clerkError?.statusCode;
 
-        // Already deleted in Clerk
         if (clerkStatus === 404) {
           continue;
         }
@@ -1525,11 +1127,6 @@ export const deleteMultipleUsers = async (req, res) => {
       }
     }
 
-    // =================================================
-    // IF ANY CLERK DELETE FAILED
-    // DO NOT DELETE THOSE USERS FROM MONGO
-    // =================================================
-
     if (clerkErrors.length > 0) {
       return res.status(500).json({
         success: false,
@@ -1538,10 +1135,6 @@ export const deleteMultipleUsers = async (req, res) => {
         errors: clerkErrors,
       });
     }
-
-    // =================================================
-    // DELETE FROM MONGODB
-    // =================================================
 
     const deleteResult =
       await User.deleteMany({
@@ -1552,10 +1145,6 @@ export const deleteMultipleUsers = async (req, res) => {
         },
       });
 
-    // =================================================
-    // SUCCESS
-    // =================================================
-
     return res.status(200).json({
       success: true,
       message:
@@ -1563,7 +1152,6 @@ export const deleteMultipleUsers = async (req, res) => {
       deletedCount:
         deleteResult.deletedCount,
     });
-
   } catch (error) {
     console.error(
       "DELETE MULTIPLE USERS ERROR:",
@@ -1578,10 +1166,6 @@ export const deleteMultipleUsers = async (req, res) => {
     });
   }
 };
-
-// =====================================================
-// RESTORE USER
-// =====================================================
 
 export const restoreUser = async (
   req,
@@ -1604,10 +1188,6 @@ export const restoreUser = async (
     user.isActive = true;
 
     await user.save();
-
-    // =================================================
-    // UNBAN CLERK
-    // =================================================
 
     await clerkClient.users.unbanUser(
       user.clerkUserId

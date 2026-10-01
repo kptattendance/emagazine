@@ -32,11 +32,30 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: [
         "admin",
-        "sports_officer",
-        "college_coordinator",
+        "hod",
+        "principal",
+        "staff",
+        "mag_coordinator",
         "student",
       ],
       default: "student",
+    },
+
+    department: {
+      type: String,
+      enum: [
+        "AE", // Automobile Engineering
+        "CE", // Civil Engineering
+        "ME", // Mechanical Engineering
+        "EE", // Electrical & Electronics Engineering
+        "CH", // Chemical Engineering
+        "PT", // Polymer Technology
+        "EC", // Electronics & Communication Engineering
+        "CS", // Computer Science & Engineering
+        "SC", // Science
+        "IN", // Institute / Institutional Activities
+      ],
+      trim: true,
     },
 
     isActive: {

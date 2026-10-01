@@ -74,9 +74,7 @@ export default function AuthCheckPage() {
 
         console.log(
           "Authorization header prepared:",
-          config.headers.Authorization
-            ? "YES"
-            : "NO"
+          config.headers.Authorization ? "YES" : "NO"
         );
 
         // -------------------------------------------------
@@ -155,9 +153,7 @@ export default function AuthCheckPage() {
               // POSSIBLE RACE CONDITION
               // -------------------------------------------------
 
-              if (
-                createError.response?.status === 409
-              ) {
+              if (createError.response?.status === 409) {
                 console.log(
                   "User already exists. Fetching again..."
                 );
@@ -217,7 +213,9 @@ export default function AuthCheckPage() {
         // ROLE
         // -------------------------------------------------
 
-        const role = userData.role;
+        const role = String(userData.role || "")
+          .trim()
+          .toLowerCase();
 
         console.log(
           "USER ROLE:",
@@ -235,31 +233,47 @@ export default function AuthCheckPage() {
             );
 
             router.replace("/admin");
-            break;
+            return;
 
-          case "sports_officer":
+          case "hod":
             console.log(
-              "Redirecting to /sports-officer"
+              "Redirecting to /hod"
             );
 
-            router.replace("/sports-officer");
-            break;
+            router.replace("/hod");
+            return;
 
-          case "college_coordinator":
+          case "principal":
             console.log(
-              "Redirecting to /college"
+              "Redirecting to /principal"
             );
 
-            router.replace("/college");
-            break;
+            router.replace("/principal");
+            return;
+
+          case "staff":
+            console.log(
+              "Redirecting to /staff"
+            );
+
+            router.replace("/staff");
+            return;
+
+          case "mag_coordinator":
+            console.log(
+              "Redirecting to /magazine"
+            );
+
+            router.replace("/magazine");
+            return;
 
           case "student":
             console.log(
               "Redirecting to /student"
             );
 
-            router.replace("/student");
-            break;
+            router.replace("/student/magazine");
+            return;
 
           default:
             console.error(
@@ -269,6 +283,7 @@ export default function AuthCheckPage() {
 
             await signOut();
             router.replace("/");
+            return;
         }
       } catch (error) {
         console.error(

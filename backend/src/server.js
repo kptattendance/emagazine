@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import { clerkMiddleware } from "@clerk/express";
-
+import activityRoutes from "./routes/activityRoutes.js";
+import magazineContentRoutes from "./routes/magazineContentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import connectDB from "./config/db.js";
 
@@ -61,10 +62,13 @@ app.get("/", (req, res) => {
 // --------------------------------------------------
 
 
+app.use(
+  "/api/magazine-content",
+  magazineContentRoutes
+);
 
 
-
-
+app.use("/api/activities", activityRoutes);
 
 app.use(
   "/api/users",
