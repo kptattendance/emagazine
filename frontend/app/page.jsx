@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import Link from "next/link";
+import Navbar from "./components/Navbar";
 
 import {
   ArrowRight,
@@ -327,6 +328,9 @@ export default function HomePage() {
       : null;
 
   return (
+    <>
+    
+    <Navbar/>
     <main className="min-h-screen bg-[#f7faf9] text-slate-800">
 
       {/* HERO */}
@@ -1076,6 +1080,7 @@ export default function HomePage() {
       </footer>
 
     </main>
+    </>
   );
 }
 
