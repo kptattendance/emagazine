@@ -1,93 +1,202 @@
-import { ClerkProvider } from "@clerk/nextjs";
-import Navbar from "./components/Navbar";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
+
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
 
 export const metadata = {
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ||
-      "https://emag.kptmangaluru.in"
-  ),
+  metadataBase: new URL("https://emagg.kptmangaluru.in"),
 
   title: {
-    default:
-      "KPT Mangaluru eMagazine | Karnataka Government Polytechnic",
+    default: "KPT Mangaluru eMagazine",
     template: "%s | KPT Mangaluru eMagazine",
   },
 
   description:
-    "KPT Mangaluru eMagazine showcases academic activities, student achievements, institutional events, department activities and campus highlights of Karnataka Government Polytechnic, Mangaluru.",
+    "KPT Mangaluru eMagazine featuring institutional activities, departmental events, student achievements, workshops, industrial visits and other activities of Karnataka Government Polytechnic Mangaluru.",
 
   keywords: [
-    "KPT Mangaluru",
-    "Karnataka Government Polytechnic Mangaluru",
+    "eMagazine" ,"Magazine" ,"eMagazine KPT " ,"Magazine KPT","KPT eMagazine","KPT Magazine",
     "KPT Mangaluru eMagazine",
-    "Polytechnic Mangaluru",
-    "Diploma College Mangaluru",
-    "student achievements",
-    "college activities",
-    "technical education",
+    "KPT Mangalore eMagazine",
+    "KPT Mangaluru Magazine",
+    "KPT Mangalore Magazine",
+    "Karnataka Government Polytechnic Mangaluru",
+    "Karnataka Government Polytechnic Mangalore",
+    "KPT Mangaluru activities",
+    "KPT Mangaluru events",
+    "KPT Mangalore events",
+    "KPT student activities",
+    "KPT student achievements",
+    "KPT Mangaluru student achievements",
+    "KPT workshops",
+    "KPT industrial visits",
+    "KPT departmental activities",
+    "polytechnic activities Mangaluru",
+    "polytechnic events Mangaluru",
+    "college events Mangaluru",
+    "student achievements Mangaluru",
+    "Karnataka Polytechnic activities",
   ],
 
   authors: [
     {
-      name: "Karnataka Government Polytechnic, Mangaluru",
+      name: "Karnataka Government Polytechnic Mangaluru",
     },
   ],
 
-  creator:
-    "Karnataka Government Polytechnic, Mangaluru",
+  creator: "Karnataka Government Polytechnic Mangaluru",
 
-  publisher:
-    "Karnataka Government Polytechnic, Mangaluru",
+  publisher: "Karnataka Government Polytechnic Mangaluru",
 
-  applicationName:
-    "KPT Mangaluru eMagazine",
+  applicationName: "KPT Mangaluru eMagazine",
 
-  alternates: {
-    canonical: "/",
+  category: "Education",
+
+  classification: "Educational Institution",
+
+  referrer: "origin-when-cross-origin",
+
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+
+  // Google Search Console verification
+  verification: {
+    google: "O67tWHY9xLUtBxSrAxCliKSiLNqr1KiTwmd_uKb_iVA",
   },
 
   robots: {
     index: true,
     follow: true,
+
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 
   openGraph: {
     type: "website",
     locale: "en_IN",
-    url: "/",
+
+    url: "https://emagg.kptmangaluru.in",
+
     siteName: "KPT Mangaluru eMagazine",
-    title:
-      "KPT Mangaluru eMagazine | Karnataka Government Polytechnic",
+
+    title: "KPT Mangaluru eMagazine",
+
     description:
-      "Academic activities, student achievements, institutional events and campus highlights from KPT Mangaluru.",
+      "Explore departmental activities, student achievements, workshops, industrial visits, events and institutional activities of Karnataka Government Polytechnic Mangaluru.",
+
+    // Add /public/og-image.jpg when available
+    images: [
+      {
+        url: "/og-image.jpg",
+        width: 1200,
+        height: 630,
+        alt: "KPT Mangaluru eMagazine",
+      },
+    ],
+  },
+
+  twitter: {
+    card: "summary_large_image",
+
+    title: "KPT Mangaluru eMagazine",
+
+    description:
+      "Departmental activities, student achievements, workshops, industrial visits and events of KPT Mangaluru.",
+
+    images: ["/og-image.jpg"],
+  },
+
+  alternates: {
+    canonical: "https://emagg.kptmangaluru.in",
   },
 
   icons: {
     icon: "/favicon.ico",
-  },
-
-  verification: {
-    google:
-      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ||
-      "",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
   },
 };
 
-export default function RootLayout({
-  children,
-}) {
+const organizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+
+  name: "Karnataka Government Polytechnic Mangaluru",
+
+  alternateName: [
+    "KPT Mangaluru",
+    "KPT Mangalore",
+    "Karnataka Government Polytechnic Mangalore",
+  ],
+
+  url: "https://emagg.kptmangaluru.in",
+
+  description:
+    "Karnataka Government Polytechnic Mangaluru eMagazine featuring institutional activities, departmental events, student achievements and other college activities.",
+
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Mangaluru",
+    addressRegion: "Karnataka",
+    addressCountry: "IN",
+  },
+};
+
+const websiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+
+  name: "KPT Mangaluru eMagazine",
+
+  alternateName: "KPT Mangalore eMagazine",
+
+  url: "https://emagg.kptmangaluru.in",
+};
+
+export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body>
-        <ClerkProvider>
-
-          <Navbar />
-
+    <ClerkProvider>
+      <html lang="en">
+        <body
+          className={`${geistSans.variable} ${geistMono.variable}`}
+        >
           {children}
 
-        </ClerkProvider>
-      </body>
-    </html>
+          {/* Educational Organization Structured Data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(organizationSchema),
+            }}
+          />
+
+          {/* Website Structured Data */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(websiteSchema),
+            }}
+          />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
