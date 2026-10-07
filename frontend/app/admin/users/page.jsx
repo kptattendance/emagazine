@@ -29,10 +29,6 @@ import { useAuth } from "@clerk/nextjs";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// =====================================================
-// ROLES
-// =====================================================
-
 const ROLES = [
   {
     value: "admin",
@@ -54,8 +50,11 @@ const ROLES = [
     value: "mag_coordinator",
     label: "Magazine Coordinator",
   },
+  {
+    value: "student",
+    label: "Student",
+  },
 ];
-
 
 const DEPARTMENTS = [
   {
