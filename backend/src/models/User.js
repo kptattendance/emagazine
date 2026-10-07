@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema(
         "ME", // Mechanical Engineering
         "EE", // Electrical & Electronics Engineering
         "CH", // Chemical Engineering
-        "PT", // Polymer Technology
+        "PS", // Polymer Technology
         "EC", // Electronics & Communication Engineering
         "CS", // Computer Science & Engineering
         "SC", // Science

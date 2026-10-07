@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function CreateMagazineContentPage() {
@@ -655,6 +656,9 @@ useEffect(() => {
   */
 
   return (
+  
+    
+
     <div className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
 
@@ -664,7 +668,7 @@ useEffect(() => {
           <button
             type="button"
             onClick={() =>
-              router.push("/student")
+              router.push("/student/magazine")
             }
             className="mb-4 text-sm font-medium text-slate-500 transition hover:text-slate-800"
           >
@@ -871,8 +875,7 @@ useEffect(() => {
 
 
               {/* DEPARTMENT */}
-
-            <div>
+<div>
   <label className="mb-2 block text-sm font-medium text-slate-700">
     Department
     <span className="text-red-500">
@@ -894,40 +897,40 @@ useEffect(() => {
       Automobile Engineering
     </option>
 
-    <option value="CE">
-      Civil Engineering
-    </option>
-
-    <option value="ME">
-      Mechanical Engineering
-    </option>
-
-    <option value="EE">
-      Electrical & Electronics Engineering
-    </option>
-
     <option value="CH">
       Chemical Engineering
     </option>
 
-    <option value="PS">
-      Polymer Technology
-    </option>
-
-    <option value="EC">
-      Electronics & Communication Engineering
+    <option value="CE">
+      Civil Engineering
     </option>
 
     <option value="CS">
       Computer Science & Engineering
     </option>
 
-    <option value="SC">
-      Science
+    <option value="EC">
+      Electronics & Communication Engineering
+    </option>
+
+    <option value="EE">
+      Electrical & Electronics Engineering
     </option>
 
     <option value="IN">
       Institute
+    </option>
+
+    <option value="ME">
+      Mechanical Engineering
+    </option>
+
+    <option value="PS">
+      Polymer Technology
+    </option>
+
+    <option value="SC">
+      Science and Humanities
     </option>
   </select>
 </div>
@@ -1206,5 +1209,6 @@ useEffect(() => {
         </form>
       </div>
     </div>
+  
   );
 }
