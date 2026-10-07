@@ -1,3 +1,4 @@
+import RoleProtected from "../components/RoleProtected";
 import AdminSidebar from "./components/AdminSidebar";
 
 export const metadata = {
@@ -12,7 +13,11 @@ export const metadata = {
 
 export default function AdminLayout({ children }) {
   return (
+
     <div className="min-h-screen bg-slate-50">
+
+    <RoleProtected allowedRoles={["admin"]}>
+
       <AdminSidebar />
 
       <main className="min-h-screen lg:pl-[270px]">
@@ -20,6 +25,7 @@ export default function AdminLayout({ children }) {
           {children}
         </div>
       </main>
+      </RoleProtected>
     </div>
   );
 }

@@ -311,7 +311,6 @@ export default function HODMagazineCreatePage() {
         }
       );
 
-      console.log("Magazine create response:", response.data);
 
       await Swal.fire({
         icon: "success",

@@ -1,3 +1,4 @@
+import RoleProtected from "../components/RoleProtected";
 import HODSidebar from "./components/HODSidebar";
 
 export const metadata = {
@@ -11,6 +12,8 @@ export const metadata = {
 export default function HODLayout({ children }) {
   return (
     <div className="min-h-screen bg-slate-50">
+      <RoleProtected allowedRoles={["hod"]}>
+
       <HODSidebar />
 
       <main className="min-h-screen lg:pl-[260px]">
@@ -18,6 +21,7 @@ export default function HODLayout({ children }) {
           {children}
         </div>
       </main>
+      </RoleProtected>
     </div>
   );
 }

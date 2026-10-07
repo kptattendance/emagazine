@@ -21,22 +21,13 @@ export default function AuthCheckPage() {
 
     const verifyUser = async () => {
       try {
-        console.log("========================================");
-        console.log("AUTH CHECK STARTED");
-        console.log("========================================");
-
-        console.log("Clerk loaded:", isLoaded);
-        console.log("User loaded:", isUserLoaded);
-        console.log("Signed in:", isSignedIn);
-        console.log("Clerk user:", user?.id);
-        console.log("API URL:", API_URL);
+     
 
         // -------------------------------------------------
         // NOT SIGNED IN
         // -------------------------------------------------
 
         if (!isSignedIn || !user) {
-          console.log("User is not signed in.");
           router.replace("/");
           return;
         }
@@ -47,10 +38,7 @@ export default function AuthCheckPage() {
 
         const token = await getToken();
 
-        console.log(
-          "Clerk token received:",
-          token ? "YES" : "NO"
-        );
+       
 
         if (!token) {
           console.error(
@@ -72,10 +60,7 @@ export default function AuthCheckPage() {
           },
         };
 
-        console.log(
-          "Authorization header prepared:",
-          config.headers.Authorization ? "YES" : "NO"
-        );
+       
 
         // -------------------------------------------------
         // GET EXISTING USER
@@ -89,30 +74,10 @@ export default function AuthCheckPage() {
             config
           );
 
-          console.log(
-            "GET /api/users/me status:",
-            response.status
-          );
-
-          console.log(
-            "GET /api/users/me response:",
-            response.data
-          );
+    
         } catch (error) {
-          console.log(
-            "GET /api/users/me failed:",
-            error.response?.status
-          );
+          
 
-          console.log(
-            "GET /api/users/me response:",
-            error.response?.data
-          );
-
-          // -------------------------------------------------
-          // USER DOES NOT EXIST
-          // CREATE USER
-          // -------------------------------------------------
 
           if (error.response?.status === 404) {
             console.log(
@@ -139,24 +104,14 @@ export default function AuthCheckPage() {
                 config
               );
 
-              console.log(
-                "POST /api/users/me status:",
-                response.status
-              );
-
-              console.log(
-                "User created:",
-                response.data
-              );
+            
             } catch (createError) {
               // -------------------------------------------------
               // POSSIBLE RACE CONDITION
               // -------------------------------------------------
 
               if (createError.response?.status === 409) {
-                console.log(
-                  "User already exists. Fetching again..."
-                );
+              
 
                 response = await axios.get(
                   `${API_URL}/api/users/me`,
@@ -180,10 +135,7 @@ export default function AuthCheckPage() {
           response?.data?.user ||
           response?.data;
 
-        console.log(
-          "FINAL USER DATA:",
-          userData
-        );
+       
 
         if (!userData) {
           console.error(
@@ -200,9 +152,7 @@ export default function AuthCheckPage() {
         // -------------------------------------------------
 
         if (userData.isActive === false) {
-          console.log(
-            "User account is inactive."
-          );
+         
 
           await signOut();
           router.replace("/");
@@ -217,61 +167,44 @@ export default function AuthCheckPage() {
           .trim()
           .toLowerCase();
 
-        console.log(
-          "USER ROLE:",
-          role
-        );
-
+       
         // -------------------------------------------------
         // REDIRECT
         // -------------------------------------------------
 
         switch (role) {
           case "admin":
-            console.log(
-              "Redirecting to /admin"
-            );
+          
 
             router.replace("/admin");
             return;
 
           case "hod":
-            console.log(
-              "Redirecting to /hod"
-            );
+          
 
             router.replace("/hod");
             return;
 
           case "principal":
-            console.log(
-              "Redirecting to /principal"
-            );
+         
 
             router.replace("/principal");
             return;
 
           case "staff":
-            console.log(
-              "Redirecting to /staff"
-            );
+          
 
             router.replace("/staff");
             return;
 
           case "mag_coordinator":
-            console.log(
-              "Redirecting to /magazine"
-            );
+          
 
             router.replace("/magazine");
             return;
 
           case "student":
-            console.log(
-              "Redirecting to /student"
-            );
-
+           
             router.replace("/student/magazine");
             return;
 

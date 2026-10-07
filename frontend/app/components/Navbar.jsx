@@ -51,16 +51,12 @@ export default function Navbar() {
 
     const determineDashboard = async () => {
       try {
-        console.log(
-          "Navbar: determining dashboard..."
-        );
+     
 
         const token = await getToken();
 
         if (!token) {
-          console.log(
-            "Navbar: Clerk token not available yet."
-          );
+       
           return;
         }
 
@@ -75,10 +71,6 @@ export default function Navbar() {
 
         if (cancelled) return;
 
-        console.log(
-          "Navbar user response:",
-          response.data
-        );
 
         const userData =
           response.data?.data ||
@@ -91,10 +83,6 @@ export default function Navbar() {
           .trim()
           .toLowerCase();
 
-        console.log(
-          "Navbar detected role:",
-          role
-        );
 
         switch (role) {
           case "admin":
@@ -145,9 +133,7 @@ export default function Navbar() {
         */
 
         if (status === 404) {
-          console.log(
-            "Navbar: Mongo user not created yet. Auth check will handle it."
-          );
+       
 
           setDashboardUrl("/auth/check");
           return;
