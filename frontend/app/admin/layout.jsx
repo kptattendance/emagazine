@@ -1,5 +1,4 @@
-import RoleProtected from "../components/RoleProtected";
-import AdminSidebar from "./components/AdminSidebar";
+import PanelShell from "../components/PanelShell";
 
 export const metadata = {
   title: {
@@ -11,21 +10,12 @@ export const metadata = {
     "KPT Mangaluru eMagazine administration dashboard.",
 };
 
+const ALLOWED_ROLES = ["admin"];
+
 export default function AdminLayout({ children }) {
   return (
-
-    <div className="min-h-screen bg-slate-50">
-
-    <RoleProtected allowedRoles={["admin"]}>
-
-      <AdminSidebar />
-
-      <main className="min-h-screen lg:pl-[270px]">
-        <div className="px-4 pb-10 pt-20 sm:px-6 lg:px-8 lg:pt-8">
-          {children}
-        </div>
-      </main>
-      </RoleProtected>
-    </div>
+    <PanelShell panel="admin" allowedRoles={ALLOWED_ROLES}>
+      {children}
+    </PanelShell>
   );
 }

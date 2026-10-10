@@ -1,5 +1,4 @@
-import RoleProtected from "../components/RoleProtected";
-import HODSidebar from "./components/HODSidebar";
+import PanelShell from "../components/PanelShell";
 
 export const metadata = {
   title: {
@@ -9,19 +8,12 @@ export const metadata = {
   description: "KPT Mangaluru HOD dashboard.",
 };
 
+const ALLOWED_ROLES = ["hod"];
+
 export default function HODLayout({ children }) {
   return (
-    <div className="min-h-screen bg-slate-50">
-      <RoleProtected allowedRoles={["hod"]}>
-
-      <HODSidebar />
-
-      <main className="min-h-screen lg:pl-[260px]">
-        <div className="px-4 pb-10 pt-20 sm:px-6 lg:px-8 lg:pt-8">
-          {children}
-        </div>
-      </main>
-      </RoleProtected>
-    </div>
+    <PanelShell panel="hod" allowedRoles={ALLOWED_ROLES}>
+      {children}
+    </PanelShell>
   );
 }

@@ -19,6 +19,10 @@ const { getToken } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
   const [userData, setUserData] = useState(null);
+
+  // activity → college activity, creative → own work
+  const [postType, setPostType] = useState("activity");
+  const [originalWork, setOriginalWork] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
   const [form, setForm] = useState({
@@ -184,6 +188,37 @@ useEffect(() => {
     } finally {
       setLoadingActivities(false);
     }
+  };
+
+
+  /*
+  =====================================================
+  POST TYPE
+  =====================================================
+  */
+
+  const isCreative = postType === "creative";
+
+  const typeActivities = activities.filter(
+    (activity) =>
+      (activity.type || "activity") === postType
+  );
+
+  const selectedActivity = activities.find(
+    (activity) => activity._id === form.activity
+  );
+
+  const imageRequired =
+    !isCreative ||
+    selectedActivity?.imageRequired !== false;
+
+  const handlePostTypeChange = (type) => {
+    setPostType(type);
+
+    setForm((prev) => ({
+      ...prev,
+      activity: "",
+    }));
   };
 
 
@@ -369,15 +404,19 @@ useEffect(() => {
     }
 
     if (!form.activity) {
-      return "Please select an activity.";
+      return isCreative
+        ? "Please select a category."
+        : "Please select an activity.";
     }
 
-    if (!form.eventDate) {
+    if (!isCreative && !form.eventDate) {
       return "Please select the event date.";
     }
 
     if (!form.description.trim()) {
-      return "Please enter a description.";
+      return isCreative
+        ? "Please enter your write-up."
+        : "Please enter a description.";
     }
 
     if (!form.name.trim()) {
@@ -404,8 +443,14 @@ useEffect(() => {
       return "Please upload the student photo.";
     }
 
-    if (!form.eventPhoto) {
-      return "Please upload the event photo.";
+    if (imageRequired && !form.eventPhoto) {
+      return isCreative
+        ? "Please upload the image of your work."
+        : "Please upload the event photo.";
+    }
+
+    if (isCreative && !originalWork) {
+      return "Please confirm that this is your own original work.";
     }
 
     return null;
@@ -488,10 +533,17 @@ useEffect(() => {
         form.department.trim()
       );
 
-      formData.append(
-        "eventDate",
-        form.eventDate
-      );
+      if (isCreative) {
+        formData.append(
+          "originalWork",
+          "true"
+        );
+      } else {
+        formData.append(
+          "eventDate",
+          form.eventDate
+        );
+      }
 
       formData.append(
         "description",
@@ -542,10 +594,12 @@ useEffect(() => {
         form.studentPhoto
       );
 
-      formData.append(
-        "eventPhoto",
-        form.eventPhoto
-      );
+      if (form.eventPhoto) {
+        formData.append(
+          "eventPhoto",
+          form.eventPhoto
+        );
+      }
 
       const response = await axios.post(
         `${API_URL}/api/magazine-content`,
@@ -681,7 +735,7 @@ useEffect(() => {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Share an activity or event for the college eMagazine.
+              Share a college activity, or your own article, poem or artwork.
             </p>
           </div>
         </div>
@@ -700,12 +754,50 @@ useEffect(() => {
 
             <div className="mb-5">
               <h2 className="text-lg font-semibold text-slate-800">
-                Activity Details
+                Content Details
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Enter the details of the activity or event.
+                Choose what you are submitting and enter its details.
               </p>
+            </div>
+
+            {/* POST TYPE */}
+
+            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {[
+                {
+                  value: "activity",
+                  title: "College Activity",
+                  text: "An event, visit, workshop or achievement.",
+                },
+                {
+                  value: "creative",
+                  title: "My Own Work",
+                  text: "An article, poem, story, drawing or photograph.",
+                },
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() =>
+                    handlePostTypeChange(option.value)
+                  }
+                  className={`rounded-xl border px-4 py-3 text-left transition ${
+                    postType === option.value
+                      ? "border-[#d4a017] bg-[#d4a017]/10"
+                      : "border-slate-300 bg-white hover:bg-slate-50"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-slate-800">
+                    {option.title}
+                  </p>
+
+                  <p className="mt-1 text-xs text-slate-500">
+                    {option.text}
+                  </p>
+                </button>
+              ))}
             </div>
 
 
@@ -726,7 +818,11 @@ useEffect(() => {
                   name="title"
                   value={form.title}
                   onChange={handleChange}
-                  placeholder="Example: Industrial Visit to Infosys"
+                  placeholder={
+                    isCreative
+                      ? "Title of your work"
+                      : "Example: Industrial Visit to Infosys"
+                  }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
                 />
               </div>
@@ -736,7 +832,7 @@ useEffect(() => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Activity
+                  {isCreative ? "Category" : "Activity"}
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -751,11 +847,13 @@ useEffect(() => {
                 >
                   <option value="">
                     {loadingActivities
-                      ? "Loading activities..."
-                      : "Select activity"}
+                      ? "Loading..."
+                      : isCreative
+                        ? "Select category"
+                        : "Select activity"}
                   </option>
 
-                  {activities.map(
+                  {typeActivities.map(
                     (activity) => (
                       <option
                         key={activity._id}
@@ -771,6 +869,7 @@ useEffect(() => {
 
               {/* EVENT DATE */}
 
+              {!isCreative && (
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   Event Date
@@ -787,13 +886,14 @@ useEffect(() => {
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
                 />
               </div>
+              )}
 
 
               {/* DESCRIPTION */}
 
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Description
+                  {isCreative ? "Write-up" : "Description"}
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -803,9 +903,13 @@ useEffect(() => {
                   name="description"
                   value={form.description}
                   onChange={handleChange}
-                  rows={6}
-                  placeholder="Describe the activity, what happened, important highlights, participation, outcome, etc."
-                  className="w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
+                  rows={isCreative ? 12 : 6}
+                  placeholder={
+                    isCreative
+                      ? "Type your article, poem or story here. For a drawing or photograph, write a short note about it."
+                      : "Describe the activity, what happened, important highlights, participation, outcome, etc."
+                  }
+                  className="w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
                 />
               </div>
 
@@ -1020,7 +1124,7 @@ useEffect(() => {
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Upload the student photograph and the event photograph.
+                Upload the student photograph and the {isCreative ? "image of your work" : "event photograph"}.
                 Maximum 10 MB per image.
               </p>
             </div>
@@ -1091,10 +1195,16 @@ useEffect(() => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Event Photo
-                  <span className="text-red-500">
-                    {" "}*
-                  </span>
+                  {isCreative ? "Image of Your Work" : "Event Photo"}
+                  {imageRequired ? (
+                    <span className="text-red-500">
+                      {" "}*
+                    </span>
+                  ) : (
+                    <span className="text-slate-400">
+                      {" "}(optional)
+                    </span>
+                  )}
                 </label>
 
                 <label className="flex min-h-[220px] cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 p-5 text-center transition hover:border-[#d4a017] hover:bg-[#d4a017]/5">
@@ -1167,11 +1277,35 @@ useEffect(() => {
                 <p className="mt-1 text-sm leading-6 text-slate-600">
                   After submission, the content will be sent to the
                   concerned HOD for approval before it is published
-                  in the eMagazine.
+                  in the eMagazine. Institute level content is approved
+                  by the Magazine Coordinator.
                 </p>
               </div>
             </div>
           </div>
+
+
+          {/* =================================================
+              ORIGINAL WORK
+          ================================================= */}
+
+          {isCreative && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+              <input
+                type="checkbox"
+                checked={originalWork}
+                onChange={(e) =>
+                  setOriginalWork(e.target.checked)
+                }
+                className="mt-1 h-4 w-4 rounded border-slate-300"
+              />
+
+              <span className="text-sm leading-6 text-slate-700">
+                I confirm that this is my own original work and is not
+                copied from any other source.
+              </span>
+            </label>
+          )}
 
 
           {/* =================================================

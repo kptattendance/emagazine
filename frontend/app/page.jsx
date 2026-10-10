@@ -14,6 +14,8 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
+import { normalizeDepartment } from "./lib/departments";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function HomePage() {
@@ -85,9 +87,10 @@ export default function HomePage() {
       const student = article.student || {};
 
       const department =
-        article.department ||
-        student.department ||
-        "IN";
+        normalizeDepartment(
+          article.department ||
+            student.department
+        ) || "IN";
 
       const month =
         article.magazineMonth ||
@@ -904,12 +907,14 @@ function getDepartmentCode(
       .toUpperCase();
 
   const codes = {
-    AE: "AE",
+    AT: "AT",
+    AE: "AT",
     CE: "CE",
     ME: "ME",
     EE: "EE",
     CH: "CH",
-    PT: "PT",
+    PS: "PS",
+    PT: "PS",
     EC: "EC",
     CS: "CS",
     SC: "SC",
@@ -923,7 +928,7 @@ function getDepartmentCode(
   if (
     value.includes("AUTOMOBILE")
   ) {
-    return "AE";
+    return "AT";
   }
 
   if (
@@ -953,7 +958,7 @@ function getDepartmentCode(
   if (
     value.includes("POLYMER")
   ) {
-    return "PT";
+    return "PS";
   }
 
   if (
@@ -1003,11 +1008,13 @@ function getDepartmentLabel(
       .toUpperCase();
 
   const labels = {
+    AT: "Automobile Engineering",
     AE: "Automobile Engineering",
     CE: "Civil Engineering",
     ME: "Mechanical Engineering",
     EE: "Electrical & Electronics Engineering",
     CH: "Chemical Engineering",
+    PS: "Polymer Technology",
     PT: "Polymer Technology",
     EC: "Electronics & Communication Engineering",
     CS: "Computer Science & Engineering",

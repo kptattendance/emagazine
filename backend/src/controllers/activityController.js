@@ -1,6 +1,8 @@
 import Activity from "../models/Activity.js";
 import MagazineContent from "../models/MagazineContent.js";
 
+const ACTIVITY_TYPES = ["activity", "creative"];
+
 /*
 =====================================================
 DELETE SINGLE ACTIVITY
@@ -241,7 +243,7 @@ Admin adds a new activity.
 
 export const createActivity = async (req, res) => {
   try {
-    const { name, order } = req.body;
+    const { name, order, type, imageRequired } = req.body;
 
     const cleanName = String(name || "").trim();
 
@@ -269,8 +271,23 @@ export const createActivity = async (req, res) => {
       });
     }
 
+    if (
+      type !== undefined &&
+      !ACTIVITY_TYPES.includes(type)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid activity type.",
+      });
+    }
+
     const activity = await Activity.create({
       name: cleanName,
+      type: type || "activity",
+      imageRequired:
+        imageRequired !== undefined
+          ? Boolean(imageRequired)
+          : true,
       order:
         order !== undefined && order !== ""
           ? Number(order)
@@ -313,7 +330,22 @@ export const updateActivity = async (req, res) => {
       });
     }
 
-    const { name, order } = req.body;
+    const { name, order, type, imageRequired } = req.body;
+
+    if (type !== undefined) {
+      if (!ACTIVITY_TYPES.includes(type)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid activity type.",
+        });
+      }
+
+      activity.type = type;
+    }
+
+    if (imageRequired !== undefined) {
+      activity.imageRequired = Boolean(imageRequired);
+    }
 
     if (name !== undefined) {
       const cleanName = String(name).trim();

@@ -1,6 +1,8 @@
 import User from "../models/User.js";
 import { clerkClient } from "@clerk/express";
 
+import { DEPARTMENTS } from "../config/departments.js";
+
 const ADMIN_CREATED_ROLES = [
   "admin",
   "hod",
@@ -16,19 +18,6 @@ const ALL_ROLES = [
   "staff",
   "mag_coordinator",
   "student",
-];
-
-const DEPARTMENTS = [
-  "AE",
-  "CE",
-  "ME",
-  "EE",
-  "CH",
-  "PT",
-  "EC",
-  "CS",
-  "SC",
-  "IN",
 ];
 
 const splitName = (fullName = "") => {

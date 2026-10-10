@@ -31,6 +31,13 @@ export default function EditMagazineContentPage() {
   const [saving, setSaving] =
     useState(false);
 
+  // activity → college activity, creative → own work
+  const [contentType, setContentType] =
+    useState("activity");
+
+  const isCreative =
+    contentType === "creative";
+
   const [form, setForm] =
     useState({
       title: "",
@@ -189,6 +196,11 @@ export default function EditMagazineContentPage() {
         return;
       }
 
+
+      setContentType(
+        content.contentType ||
+          "activity"
+      );
 
       setForm({
         title:
@@ -554,7 +566,9 @@ export default function EditMagazineContentPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold">
-                  Activity
+                  {isCreative
+                    ? "Category"
+                    : "Activity"}
                 </label>
 
                 <select
@@ -568,10 +582,19 @@ export default function EditMagazineContentPage() {
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
                 >
                   <option value="">
-                    Select activity
+                    {isCreative
+                      ? "Select category"
+                      : "Select activity"}
                   </option>
 
-                  {activities.map(
+                  {activities
+                    .filter(
+                      (item) =>
+                        (item.type ||
+                          "activity") ===
+                        contentType
+                    )
+                    .map(
                     (item) => (
                       <option
                         key={item._id}
@@ -585,6 +608,7 @@ export default function EditMagazineContentPage() {
               </div>
 
 
+              {!isCreative && (
               <div>
                 <label className="mb-2 block text-sm font-semibold">
                   Event Date
@@ -602,18 +626,21 @@ export default function EditMagazineContentPage() {
                   className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
                 />
               </div>
+              )}
 
             </div>
 
 
             <div>
               <label className="mb-2 block text-sm font-semibold">
-                Description
+                {isCreative
+                  ? "Write-up"
+                  : "Description"}
               </label>
 
               <textarea
                 name="description"
-                rows={6}
+                rows={isCreative ? 12 : 6}
                 value={
                   form.description
                 }
@@ -772,7 +799,9 @@ export default function EditMagazineContentPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold">
-                  Event Photo
+                  {isCreative
+                    ? "Image of Your Work"
+                    : "Event Photo"}
                 </label>
 
                 {eventPreview ||

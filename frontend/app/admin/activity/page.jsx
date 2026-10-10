@@ -34,6 +34,8 @@ export default function ActivityPage() {
   const [form, setForm] = useState({
     name: "",
     order: 0,
+    type: "activity",
+    imageRequired: true,
   });
 
   // =====================================================
@@ -127,6 +129,8 @@ export default function ActivityPage() {
     setForm({
       name: "",
       order: 0,
+      type: "activity",
+      imageRequired: true,
     });
 
     setShowModal(true);
@@ -142,6 +146,8 @@ export default function ActivityPage() {
     setForm({
       name: activity.name || "",
       order: activity.order ?? 0,
+      type: activity.type || "activity",
+      imageRequired: activity.imageRequired !== false,
     });
 
     setShowModal(true);
@@ -160,6 +166,8 @@ export default function ActivityPage() {
     setForm({
       name: "",
       order: 0,
+      type: "activity",
+      imageRequired: true,
     });
   };
 
@@ -210,6 +218,9 @@ export default function ActivityPage() {
       const payload = {
         name: cleanName,
         order: Number(form.order) || 0,
+        type: form.type,
+        imageRequired:
+          form.type === "activity" || form.imageRequired,
       };
 
       let response;
@@ -798,6 +809,15 @@ export default function ActivityPage() {
                             {activity.name}
                           </p>
 
+                          {activity.type === "creative" && (
+                            <span className="mt-1 inline-flex rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
+                              Own work category
+                              {activity.imageRequired === false
+                                ? " · image optional"
+                                : ""}
+                            </span>
+                          )}
+
                           <p className="mt-0.5 text-xs text-slate-400">
                             Added{" "}
                             {activity.createdAt
@@ -957,6 +977,47 @@ export default function ActivityPage() {
                 />
 
               </div>
+
+              <div>
+
+                <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+                  Used For
+                </label>
+
+                <select
+                  name="type"
+                  value={form.type}
+                  onChange={handleChange}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                >
+                  <option value="activity">
+                    College activity (event, visit, workshop...)
+                  </option>
+
+                  <option value="creative">
+                    Own work (article, poem, drawing...)
+                  </option>
+                </select>
+
+              </div>
+
+              {form.type === "creative" && (
+                <label className="flex cursor-pointer items-center gap-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={form.imageRequired}
+                    onChange={(e) =>
+                      setForm((previous) => ({
+                        ...previous,
+                        imageRequired: e.target.checked,
+                      }))
+                    }
+                    className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
+                  />
+
+                  Image is compulsory (for example: drawing, photography)
+                </label>
+              )}
 
               <div>
 

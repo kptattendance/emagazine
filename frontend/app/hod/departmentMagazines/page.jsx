@@ -52,6 +52,9 @@ export default function HODDepartmentMagazinePage() {
   const [search, setSearch] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const [activityNames, setActivityNames] =
+    useState([]);
+
   const [activityFilter, setActivityFilter] =
     useState("");
   const [statusFilter, setStatusFilter] =
@@ -150,6 +153,25 @@ export default function HODDepartmentMagazinePage() {
           ? data
           : []
       );
+
+      // -------------------------------------------------
+      // GET ALL ACTIVITIES FOR THE FILTER
+      // -------------------------------------------------
+
+      const activityResponse =
+        await axios.get(
+          `${API_URL}/api/activities`,
+          { headers }
+        );
+
+      setActivityNames(
+        (
+          activityResponse.data?.data ||
+          []
+        ).map(
+          (activity) => activity.name
+        )
+      );
     } catch (error) {
       console.error(
         "Department magazine load error:",
@@ -191,11 +213,14 @@ export default function HODDepartmentMagazinePage() {
       .filter(Boolean);
 
     return [
-      ...new Set(names),
+      ...new Set([
+        ...activityNames,
+        ...names,
+      ]),
     ].sort((a, b) =>
       a.localeCompare(b)
     );
-  }, [magazines]);
+  }, [magazines, activityNames]);
 
   // =====================================================
   // YEARS

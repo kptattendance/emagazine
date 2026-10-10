@@ -58,7 +58,7 @@ const ROLES = [
 
 const DEPARTMENTS = [
   {
-    value: "AE",
+    value: "AT",
     label: "Automobile Engineering",
   },
   {
@@ -78,7 +78,7 @@ const DEPARTMENTS = [
     label: "Chemical Engineering",
   },
   {
-    value: "PT",
+    value: "PS",
     label: "Polymer Technology",
   },
   {
@@ -382,6 +382,27 @@ export default function AdminUsersPage() {
 
     setShowAddModal(true);
   };
+
+  // ===================================================
+  // OPEN ADD MODAL FROM A LINK
+  // /admin/users?add=staff opens the form with the
+  // role already selected.
+  // ===================================================
+
+  useEffect(() => {
+    const role = new URLSearchParams(
+      window.location.search
+    ).get("add");
+
+    if (!role) return;
+
+    openAddModal();
+
+    setForm((previous) => ({
+      ...previous,
+      role,
+    }));
+  }, []);
 
   // ===================================================
   // CLOSE ADD MODAL

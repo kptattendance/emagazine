@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import axios from "axios";
 
 import {
@@ -23,6 +24,13 @@ import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+const PANEL_ROUTES = [
+  "/admin",
+  "/hod",
+  "/staff",
+  "/coordinator",
+];
+
 export default function Navbar() {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [dashboardUrl, setDashboardUrl] =
@@ -35,6 +43,15 @@ export default function Navbar() {
   } = useAuth();
 
   const { user } = useUser();
+
+  const pathname = usePathname();
+
+  // Dashboards have their own sidebar and top bar
+  const insidePanel = PANEL_ROUTES.some(
+    (route) =>
+      pathname === route ||
+      pathname.startsWith(`${route}/`)
+  );
 
   /*
   ============================================================
@@ -102,7 +119,7 @@ export default function Navbar() {
             break;
 
           case "mag_coordinator":
-            setDashboardUrl("/magazine");
+            setDashboardUrl("/coordinator");
             break;
 
           case "student":
@@ -176,6 +193,10 @@ export default function Navbar() {
   NAVBAR
   ============================================================
   */
+
+  if (insidePanel) {
+    return null;
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-teal-100 bg-white/95 backdrop-blur">

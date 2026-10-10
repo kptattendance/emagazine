@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import { DEPARTMENTS } from "../config/departments.js";
+
 const userSchema = new mongoose.Schema(
   {
     clerkUserId: {
@@ -43,18 +45,7 @@ const userSchema = new mongoose.Schema(
 
     department: {
       type: String,
-      enum: [
-        "AE", // Automobile Engineering
-        "CE", // Civil Engineering
-        "ME", // Mechanical Engineering
-        "EE", // Electrical & Electronics Engineering
-        "CH", // Chemical Engineering
-        "PS", // Polymer Technology
-        "EC", // Electronics & Communication Engineering
-        "CS", // Computer Science & Engineering
-        "SC", // Science
-        "IN", // Institute / Institutional Activities
-      ],
+      enum: DEPARTMENTS,
       trim: true,
     },
 

@@ -22,12 +22,14 @@ import {
 
 import { useAuth } from "@clerk/nextjs";
 
+import { normalizeDepartment } from "../../../../lib/departments";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
 const DEPARTMENTS = [
   {
-    code: "AE",
+    code: "AT",
     name: "Automobile Engineering",
   },
   {
@@ -47,7 +49,7 @@ const DEPARTMENTS = [
     name: "Chemical Engineering",
   },
   {
-    code: "PT",
+    code: "PS",
     name: "Polymer Technology",
   },
   {
@@ -307,8 +309,9 @@ export default function HODStudentRequestEditPage() {
             "department",
 
           department:
-            content.department ||
-            "",
+            normalizeDepartment(
+              content.department
+            ),
 
           eventDate:
             content.eventDate
@@ -331,10 +334,11 @@ export default function HODStudentRequestEditPage() {
             "",
 
           studentDepartment:
-            content.student
-              ?.department ||
-            content.department ||
-            "",
+            normalizeDepartment(
+              content.student
+                ?.department ||
+                content.department
+            ),
 
           semester:
             content.student

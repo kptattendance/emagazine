@@ -1,7 +1,13 @@
 import MagazineContent from "../models/MagazineContent.js";
 import Activity from "../models/Activity.js";
-import User from "../models/User.js";
 import cloudinary from "../config/cloudinary.js";
+
+import {
+  DEPARTMENTS,
+  INSTITUTE_DEPARTMENT,
+  departmentAliases,
+  normalizeDepartment,
+} from "../config/departments.js";
 
 /*
 =====================================================
@@ -82,20 +88,121 @@ const deleteCloudinaryImage = async (url) => {
 
 /*
 =====================================================
+PERMISSION HELPERS
+=====================================================
+
+Every content item has exactly one approver,
+decided by where it is posted:
+
+Department content:
+    HOD of that department
+
+Institute content:
+    Magazine Coordinator
+
+Admin:
+    anything
+=====================================================
+*/
+
+const getRole = (user) =>
+  String(user?.role || "")
+    .trim()
+    .toLowerCase();
+
+const isInstituteContent = (content) =>
+  content.level === "institute" ||
+  normalizeDepartment(content.department) ===
+    INSTITUTE_DEPARTMENT;
+
+const canReview = (user, content) => {
+  const role = getRole(user);
+
+  if (role === "admin") {
+    return true;
+  }
+
+  if (role === "mag_coordinator") {
+    return isInstituteContent(content);
+  }
+
+  if (role === "hod") {
+    const hodDepartment =
+      normalizeDepartment(user.department);
+
+    return (
+      Boolean(hodDepartment) &&
+      hodDepartment ===
+        normalizeDepartment(content.department)
+    );
+  }
+
+  return false;
+};
+
+const isOwner = (user, content) => {
+  const submittedEmail = String(
+    content.submittedBy?.email || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const userEmail = String(user?.email || "")
+    .trim()
+    .toLowerCase();
+
+  return (
+    Boolean(submittedEmail) &&
+    submittedEmail === userEmail
+  );
+};
+
+const isStudentContent = (content) =>
+  getRole(content.submittedBy) === "student";
+
+const getApproverLabel = (content) =>
+  isInstituteContent(content)
+    ? "Magazine Coordinator"
+    : "HOD";
+
+const pendingFilterFor = (user) => {
+  const role = getRole(user);
+
+  if (role === "admin") {
+    return {};
+  }
+
+  if (role === "mag_coordinator") {
+    return {
+      $or: [
+        { level: "institute" },
+        { department: INSTITUTE_DEPARTMENT },
+      ],
+    };
+  }
+
+  if (role === "hod" && user.department) {
+    return {
+      department: {
+        $in: departmentAliases(user.department),
+      },
+    };
+  }
+
+  return null;
+};
+
+
+/*
+=====================================================
 CREATE MAGAZINE CONTENT
 =====================================================
 
-Student:
+Published directly when the submitter is the
+approver of that content (see canReview).
+
+Everything else:
     pending
-
-HOD:
-    published
-
-Magazine Coordinator:
-    institute content → published
-
-Admin:
-    published
 =====================================================
 */
 
@@ -104,21 +211,30 @@ export const createMagazineContent = async (
   res
 ) => {
   try {
+    const user = req.user;
+
     const {
-      userId,
       title,
       activity,
-      level,
-      department,
       eventDate,
       description,
+      originalWork,
 
       studentName,
       registerNumber,
       studentDepartment,
       semester,
       phone,
+
+      facultyName,
+      designation,
     } = req.body;
+
+    let { level } = req.body;
+
+    let department = normalizeDepartment(
+      req.body.department
+    );
 
 
     /*
@@ -126,13 +242,6 @@ export const createMagazineContent = async (
     VALIDATION
     =================================================
     */
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required.",
-      });
-    }
 
     if (!title?.trim()) {
       return res.status(400).json({
@@ -158,10 +267,23 @@ export const createMagazineContent = async (
       });
     }
 
-    if (!eventDate) {
+    /*
+    Institute content always uses the
+    institute department code, and vice versa.
+    */
+
+    if (
+      level === "institute" ||
+      department === INSTITUTE_DEPARTMENT
+    ) {
+      level = "institute";
+      department = INSTITUTE_DEPARTMENT;
+    }
+
+    if (!DEPARTMENTS.includes(department)) {
       return res.status(400).json({
         success: false,
-        message: "Event date is required.",
+        message: "Valid department is required.",
       });
     }
 
@@ -169,22 +291,6 @@ export const createMagazineContent = async (
       return res.status(400).json({
         success: false,
         message: "Description is required.",
-      });
-    }
-
-
-    /*
-    =================================================
-    USER
-    =================================================
-    */
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
       });
     }
 
@@ -213,6 +319,30 @@ export const createMagazineContent = async (
       });
     }
 
+    const contentType =
+      activityDocument.type || "activity";
+
+    const isCreative =
+      contentType === "creative";
+
+    if (!isCreative && !eventDate) {
+      return res.status(400).json({
+        success: false,
+        message: "Event date is required.",
+      });
+    }
+
+    if (
+      isCreative &&
+      String(originalWork) !== "true"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Please confirm that this is your own original work.",
+      });
+    }
+
 
     /*
     =================================================
@@ -220,17 +350,11 @@ export const createMagazineContent = async (
     =================================================
     */
 
-    const isStudent =
-      user.role === "student";
+    const role = getRole(user);
 
-    const isHod =
-      user.role === "hod";
+    const isStudent = role === "student";
 
-    const isAdmin =
-      user.role === "admin";
-
-    const isMagazineCoordinator =
-      user.role === "mag_coordinator";
+    const isStaff = role === "staff";
 
 
     /*
@@ -291,36 +415,71 @@ export const createMagazineContent = async (
 
     /*
     =================================================
-    EVENT PHOTO
+    FACULTY DETAILS
     =================================================
     */
 
-    if (!req.files?.eventPhoto?.[0]) {
+    if (isStaff) {
+      if (!facultyName?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Faculty name is required.",
+        });
+      }
+
+      if (!designation?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "Designation is required.",
+        });
+      }
+    }
+
+
+    /*
+    =================================================
+    EVENT PHOTO
+    =================================================
+
+    Always required for activity reports.
+    For own work it depends on the category.
+    */
+
+    const imageRequired =
+      !isCreative ||
+      activityDocument.imageRequired !== false;
+
+    if (
+      imageRequired &&
+      !req.files?.eventPhoto?.[0]
+    ) {
       return res.status(400).json({
         success: false,
-        message: "Event photo is required.",
+        message: isCreative
+          ? "An image is required for this category."
+          : "Event photo is required.",
       });
     }
 
 
     /*
     =================================================
-    UPLOAD EVENT PHOTO
+    UPLOAD PHOTOS
     =================================================
     */
 
-    const eventPhotoUpload =
-      await uploadToCloudinary(
-        req.files.eventPhoto[0],
-        "kpt-emagazine/magazine/events"
-      );
+    let eventPhotoUrl = "";
 
+    if (req.files?.eventPhoto?.[0]) {
+      const eventPhotoUpload =
+        await uploadToCloudinary(
+          req.files.eventPhoto[0],
+          "kpt-emagazine/magazine/events"
+        );
 
-    /*
-    =================================================
-    UPLOAD STUDENT PHOTO
-    =================================================
-    */
+      eventPhotoUrl =
+        eventPhotoUpload.secure_url;
+    }
 
     let studentPhotoUrl = "";
 
@@ -338,6 +497,22 @@ export const createMagazineContent = async (
         studentPhotoUpload.secure_url;
     }
 
+    let facultyPhotoUrl = "";
+
+    if (
+      !isStudent &&
+      req.files?.facultyPhoto?.[0]
+    ) {
+      const facultyPhotoUpload =
+        await uploadToCloudinary(
+          req.files.facultyPhoto[0],
+          "kpt-emagazine/magazine/faculty"
+        );
+
+      facultyPhotoUrl =
+        facultyPhotoUpload.secure_url;
+    }
+
 
     /*
     =================================================
@@ -345,18 +520,12 @@ export const createMagazineContent = async (
     =================================================
     */
 
-    let status = "pending";
-
-    if (isHod || isAdmin) {
-      status = "published";
-    }
-
-    if (
-      isMagazineCoordinator &&
-      level === "institute"
-    ) {
-      status = "published";
-    }
+    const status = canReview(user, {
+      level,
+      department,
+    })
+      ? "published"
+      : "pending";
 
 
     /*
@@ -374,8 +543,9 @@ export const createMagazineContent = async (
               .trim()
               .toUpperCase(),
 
-          department:
-            studentDepartment.trim(),
+          department: normalizeDepartment(
+            studentDepartment
+          ),
 
           semester: Number(semester),
 
@@ -391,6 +561,27 @@ export const createMagazineContent = async (
           phone: "",
           photo: "",
         };
+
+
+    /*
+    =================================================
+    FACULTY SNAPSHOT
+    =================================================
+    */
+
+    const facultyDetails =
+      !isStudent && facultyName?.trim()
+        ? {
+            name: facultyName.trim(),
+            designation:
+              designation?.trim() || "",
+            photo: facultyPhotoUrl,
+          }
+        : {
+            name: "",
+            designation: "",
+            photo: "",
+          };
 
 
     /*
@@ -419,21 +610,24 @@ export const createMagazineContent = async (
         activity:
           activityDocument._id,
 
+        contentType,
+
         level,
 
-        department:
-          department?.trim() || "",
+        department,
 
-        eventDate:
-          new Date(eventDate),
+        eventDate: eventDate
+          ? new Date(eventDate)
+          : new Date(),
 
         description:
           description.trim(),
 
-        eventPhoto:
-          eventPhotoUpload.secure_url,
+        eventPhoto: eventPhotoUrl,
 
         student: studentDetails,
+
+        faculty: facultyDetails,
 
         submittedBy,
 
@@ -472,7 +666,7 @@ export const createMagazineContent = async (
         content._id
       ).populate(
         "activity",
-        "name order"
+        "name order type"
       );
 
     return res.status(201).json({
@@ -481,7 +675,9 @@ export const createMagazineContent = async (
       message:
         status === "published"
           ? "Magazine content published successfully."
-          : "Magazine content submitted successfully and sent to the HOD for approval.",
+          : `Magazine content submitted successfully and sent to the ${getApproverLabel(
+              content
+            )} for approval.`,
 
       data: result,
     });
@@ -505,6 +701,9 @@ export const createMagazineContent = async (
 =====================================================
 GET ALL
 =====================================================
+
+Admin only.
+=====================================================
 */
 
 export const getMagazineContents = async (
@@ -516,7 +715,7 @@ export const getMagazineContents = async (
       await MagazineContent.find()
         .populate(
           "activity",
-          "name order"
+          "name order type"
         )
         .sort({
           eventDate: -1,
@@ -550,16 +749,13 @@ export const getMagazineContents = async (
 GET MY CONTENT
 =====================================================
 
-Used by student.
+Used by student and faculty.
 
 Because MagazineContent does NOT store User ID,
-we identify the student's content using the
+we identify the submitter's content using the
 snapshot:
 
 submittedBy.email
-
-The logged-in User is used only to find the
-current email.
 =====================================================
 */
 
@@ -568,26 +764,14 @@ export const getMyMagazineContents = async (
   res
 ) => {
   try {
-    const { userId } = req.params;
-
-    const user =
-      await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
     const contents =
       await MagazineContent.find({
         "submittedBy.email":
-          user.email,
+          req.user.email,
       })
         .populate(
           "activity",
-          "name order"
+          "name order type"
         )
         .sort({
           createdAt: -1,
@@ -619,6 +803,9 @@ export const getMyMagazineContents = async (
 =====================================================
 GET PUBLISHED
 =====================================================
+
+Public. Contact details are never sent.
+=====================================================
 */
 
 export const getPublishedMagazineContents =
@@ -628,9 +815,12 @@ export const getPublishedMagazineContents =
         await MagazineContent.find({
           status: "published",
         })
+          .select(
+            "-student.phone -submittedBy.email"
+          )
           .populate(
             "activity",
-            "name order"
+            "name order type"
           )
           .sort({
             eventDate: -1,
@@ -659,59 +849,52 @@ export const getPublishedMagazineContents =
   };
 
 
+/*
+=====================================================
+GET PENDING
+=====================================================
+
+HOD:
+    pending content of own department
+
+Magazine Coordinator:
+    pending institute content
+
+Admin:
+    all pending content
+=====================================================
+*/
+
 export const getPendingMagazineContents = async (req, res) => {
   try {
-    const { userId } = req.query;
+    const role = getRole(req.user);
 
-    let filter = {
-      status: "pending",
-    };
-
-    if (userId) {
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found.",
-        });
-      }
-
-      const role = String(user.role || "")
-        .trim()
-        .toLowerCase();
-
-      if (role === "hod") {
-        const hodDepartment = String(
-          user.department || ""
-        )
-          .trim()
-          .toUpperCase();
-
-        if (!hodDepartment) {
-          return res.status(400).json({
-            success: false,
-            message:
-              "Department is not assigned to this HOD.",
-          });
-        }
-
-        filter.department = hodDepartment;
-      } else if (role === "admin") {
-        filter = {
-          status: "pending",
-        };
-      } else {
-        return res.status(403).json({
-          success: false,
-          message:
-            "You are not allowed to view pending magazine content.",
-        });
-      }
+    if (
+      role === "hod" &&
+      !req.user.department
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Department is not assigned to this HOD.",
+      });
     }
 
-    const contents = await MagazineContent.find(filter)
-      .populate("activity", "name order")
+    const filter = pendingFilterFor(req.user);
+
+    if (!filter) {
+      return res.status(403).json({
+        success: false,
+        message:
+          "You are not allowed to view pending magazine content.",
+      });
+    }
+
+    const contents = await MagazineContent.find({
+      ...filter,
+      status: "pending",
+    })
+      .populate("activity", "name order type")
       .sort({
         createdAt: 1,
       })
@@ -741,6 +924,10 @@ export const getPendingMagazineContents = async (req, res) => {
 =====================================================
 GET SINGLE
 =====================================================
+
+Unpublished content is visible only to its
+submitter and its approver.
+=====================================================
 */
 
 export const getMagazineContentById =
@@ -752,7 +939,7 @@ export const getMagazineContentById =
         )
           .populate(
             "activity",
-            "name order"
+            "name order type imageRequired"
           )
           .lean();
 
@@ -761,6 +948,18 @@ export const getMagazineContentById =
           success: false,
           message:
             "Magazine content not found.",
+        });
+      }
+
+      if (
+        content.status !== "published" &&
+        !isOwner(req.user, content) &&
+        !canReview(req.user, content)
+      ) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "You are not allowed to view this content.",
         });
       }
 
@@ -789,14 +988,11 @@ export const getMagazineContentById =
 UPDATE MAGAZINE CONTENT
 =====================================================
 
-Student:
+Submitter (student / faculty):
     Can edit own pending/rejected content.
 
-HOD:
-    Can edit pending/rejected content.
-
-Admin:
-    Can edit pending/rejected content.
+Approver (HOD / Magazine Coordinator / Admin):
+    Can edit pending/rejected content they review.
 
 Published:
     Cannot be edited through this endpoint.
@@ -806,9 +1002,9 @@ Published:
 export const updateMagazineContent =
   async (req, res) => {
     try {
-      const {
-        userId,
+      const user = req.user;
 
+      const {
         title,
         activity,
         level,
@@ -821,24 +1017,10 @@ export const updateMagazineContent =
         studentDepartment,
         semester,
         phone,
+
+        facultyName,
+        designation,
       } = req.body;
-
-
-      /*
-      =================================================
-      USER
-      =================================================
-      */
-
-      const user =
-        await User.findById(userId);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: "User not found.",
-        });
-      }
 
 
       /*
@@ -884,89 +1066,14 @@ export const updateMagazineContent =
       =================================================
       */
 
-      const isHod =
-        user.role === "hod";
-
-      const isAdmin =
-        user.role === "admin";
-
-      const isStudent =
-        user.role === "student";
-
-if (isHod) {
-  const hodDepartment = String(
-    user.department || ""
-  )
-    .trim()
-    .toUpperCase();
-
-  const contentDepartment = String(
-    content.department || ""
-  )
-    .trim()
-    .toUpperCase();
-
-  if (!hodDepartment) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Department is not assigned to this HOD.",
-    });
-  }
-
-  if (!contentDepartment) {
-    return res.status(400).json({
-      success: false,
-      message:
-        "Department is not assigned to this magazine content.",
-    });
-  }
-
-  if (
-    hodDepartment !==
-    contentDepartment
-  ) {
-    return res.status(403).json({
-      success: false,
-      message:
-        "You can edit only magazine content belonging to your department.",
-    });
-  }
-}
-      /*
-      -------------------------------------------------
-      STUDENT CAN EDIT ONLY OWN CONTENT
-      -------------------------------------------------
-      */
-
-      if (isStudent) {
-        if (
-          content.submittedBy?.email !==
-          user.email
-        ) {
-          return res.status(403).json({
-            success: false,
-            message:
-              "You are not allowed to edit this content.",
-          });
-        }
-      }
-
-      /*
-      -------------------------------------------------
-      ONLY STUDENT / HOD / ADMIN
-      -------------------------------------------------
-      */
-
       if (
-        !isStudent &&
-        !isHod &&
-        !isAdmin
+        !isOwner(user, content) &&
+        !canReview(user, content)
       ) {
         return res.status(403).json({
           success: false,
           message:
-            "You are not allowed to edit magazine content.",
+            "You are not allowed to edit this content.",
         });
       }
 
@@ -1003,6 +1110,10 @@ if (isHod) {
 
         content.activity =
           activityDocument._id;
+
+        content.contentType =
+          activityDocument.type ||
+          "activity";
       }
 
 
@@ -1043,10 +1154,49 @@ if (isHod) {
 
       if (department !== undefined) {
         content.department =
-          department.trim();
+          normalizeDepartment(department);
       }
 
-      if (eventDate !== undefined) {
+      /*
+      Institute content always uses the
+      institute department code, and vice versa.
+      */
+
+      if (
+        level !== undefined ||
+        department !== undefined
+      ) {
+        const isInstitute =
+          level === "institute" ||
+          content.department ===
+            INSTITUTE_DEPARTMENT;
+
+        content.level = isInstitute
+          ? "institute"
+          : "department";
+
+        if (isInstitute) {
+          content.department =
+            INSTITUTE_DEPARTMENT;
+        }
+
+        if (
+          !DEPARTMENTS.includes(
+            content.department
+          )
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Valid department is required.",
+          });
+        }
+      }
+
+      if (
+        eventDate !== undefined &&
+        eventDate !== ""
+      ) {
         content.eventDate =
           new Date(eventDate);
       }
@@ -1070,23 +1220,11 @@ if (isHod) {
       STUDENT DETAILS
       =================================================
 
-      Only modify these when the request contains
-      student information.
+      Only for content submitted by a student.
       =================================================
       */
 
-      const studentInformationProvided =
-        studentName !== undefined ||
-        registerNumber !== undefined ||
-        studentDepartment !== undefined ||
-        semester !== undefined ||
-        phone !== undefined ||
-        req.files?.studentPhoto?.[0];
-
-
-      if (
-        studentInformationProvided
-      ) {
+      if (isStudentContent(content)) {
         if (
           studentName !== undefined
         ) {
@@ -1108,7 +1246,9 @@ if (isHod) {
           undefined
         ) {
           content.student.department =
-            studentDepartment.trim();
+            normalizeDepartment(
+              studentDepartment
+            );
         }
 
         if (
@@ -1134,6 +1274,7 @@ if (isHod) {
       */
 
       if (
+        isStudentContent(content) &&
         req.files?.studentPhoto?.[0]
       ) {
         const oldPhoto =
@@ -1157,6 +1298,48 @@ if (isHod) {
           await deleteCloudinaryImage(
             oldPhoto
           );
+        }
+      }
+
+
+      /*
+      =================================================
+      FACULTY DETAILS
+      =================================================
+
+      Only for content submitted by faculty.
+      =================================================
+      */
+
+      if (!isStudentContent(content)) {
+        if (facultyName !== undefined) {
+          content.faculty.name =
+            facultyName.trim();
+        }
+
+        if (designation !== undefined) {
+          content.faculty.designation =
+            designation.trim();
+        }
+
+        if (req.files?.facultyPhoto?.[0]) {
+          const oldPhoto =
+            content.faculty?.photo;
+
+          const uploaded =
+            await uploadToCloudinary(
+              req.files.facultyPhoto[0],
+              "kpt-emagazine/magazine/faculty"
+            );
+
+          content.faculty.photo =
+            uploaded.secure_url;
+
+          if (oldPhoto) {
+            await deleteCloudinaryImage(
+              oldPhoto
+            );
+          }
         }
       }
 
@@ -1195,8 +1378,8 @@ if (isHod) {
       REJECTED → PENDING
       =================================================
 
-      If student edits rejected content,
-      it is automatically sent back to HOD.
+      If rejected content is edited,
+      it is automatically sent back for approval.
       =================================================
       */
 
@@ -1230,7 +1413,7 @@ if (isHod) {
           content._id
         ).populate(
           "activity",
-          "name order"
+          "name order type"
         );
 
 
@@ -1256,54 +1439,18 @@ if (isHod) {
   };
 
 
+/*
+=====================================================
+APPROVE MAGAZINE CONTENT
+=====================================================
+*/
+
 export const approveMagazineContent = async (
   req,
   res
 ) => {
   try {
-    const {
-      approverId,
-    } = req.body;
-
-    if (!approverId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Approver ID is required.",
-      });
-    }
-
-    const approver =
-      await User.findById(
-        approverId
-      );
-
-    if (!approver) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Approver not found.",
-      });
-    }
-
-    const approverRole =
-      String(
-        approver.role || ""
-      )
-        .trim()
-        .toLowerCase();
-
-    if (
-      !["hod", "admin"].includes(
-        approverRole
-      )
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          "Only HOD or admin can approve content.",
-      });
-    }
+    const approver = req.user;
 
     const content =
       await MagazineContent.findById(
@@ -1328,51 +1475,13 @@ export const approveMagazineContent = async (
       });
     }
 
-    if (
-      approverRole === "hod"
-    ) {
-      const hodDepartment =
-        String(
-          approver.department || ""
-        )
-          .trim()
-          .toUpperCase();
-
-      const contentDepartment =
-        String(
-          content.department || ""
-        )
-          .trim()
-          .toUpperCase();
-
-      if (!hodDepartment) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Department is not assigned to this HOD.",
-        });
-      }
-
-      if (
-        !contentDepartment
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Department is not assigned to this magazine content.",
-        });
-      }
-
-      if (
-        hodDepartment !==
-        contentDepartment
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "You can approve only magazine content belonging to your department.",
-        });
-      }
+    if (!canReview(approver, content)) {
+      return res.status(403).json({
+        success: false,
+        message: `Only the ${getApproverLabel(
+          content
+        )} or admin can approve this content.`,
+      });
     }
 
     content.status =
@@ -1398,7 +1507,7 @@ export const approveMagazineContent = async (
         content._id
       ).populate(
         "activity",
-        "name order"
+        "name order type"
       );
 
     return res.status(200).json({
@@ -1422,23 +1531,23 @@ export const approveMagazineContent = async (
   }
 };
 
+
+/*
+=====================================================
+REJECT MAGAZINE CONTENT
+=====================================================
+*/
+
 export const rejectMagazineContent = async (
   req,
   res
 ) => {
   try {
+    const approver = req.user;
+
     const {
-      approverId,
       rejectionReason,
     } = req.body;
-
-    if (!approverId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Approver ID is required.",
-      });
-    }
 
     if (
       !rejectionReason?.trim()
@@ -1447,38 +1556,6 @@ export const rejectMagazineContent = async (
         success: false,
         message:
           "Rejection reason is required.",
-      });
-    }
-
-    const approver =
-      await User.findById(
-        approverId
-      );
-
-    if (!approver) {
-      return res.status(404).json({
-        success: false,
-        message:
-          "Approver not found.",
-      });
-    }
-
-    const approverRole =
-      String(
-        approver.role || ""
-      )
-        .trim()
-        .toLowerCase();
-
-    if (
-      !["hod", "admin"].includes(
-        approverRole
-      )
-    ) {
-      return res.status(403).json({
-        success: false,
-        message:
-          "Only HOD or admin can reject content.",
       });
     }
 
@@ -1505,51 +1582,13 @@ export const rejectMagazineContent = async (
       });
     }
 
-    if (
-      approverRole === "hod"
-    ) {
-      const hodDepartment =
-        String(
-          approver.department || ""
-        )
-          .trim()
-          .toUpperCase();
-
-      const contentDepartment =
-        String(
-          content.department || ""
-        )
-          .trim()
-          .toUpperCase();
-
-      if (!hodDepartment) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Department is not assigned to this HOD.",
-        });
-      }
-
-      if (
-        !contentDepartment
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Department is not assigned to this magazine content.",
-        });
-      }
-
-      if (
-        hodDepartment !==
-        contentDepartment
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "You can reject only magazine content belonging to your department.",
-        });
-      }
+    if (!canReview(approver, content)) {
+      return res.status(403).json({
+        success: false,
+        message: `Only the ${getApproverLabel(
+          content
+        )} or admin can reject this content.`,
+      });
     }
 
     content.status =
@@ -1575,7 +1614,7 @@ export const rejectMagazineContent = async (
         content._id
       ).populate(
         "activity",
-        "name order"
+        "name order type"
       );
 
     return res.status(200).json({
@@ -1602,18 +1641,12 @@ export const rejectMagazineContent = async (
 // =====================================================
 // DELETE MAGAZINE CONTENT
 //
-// ADMIN:
-//   Can delete anything.
-//
-// HOD:
-//   Can delete anything belonging to his department,
+// APPROVER (ADMIN / HOD / MAGAZINE COORDINATOR):
+//   Can delete anything they review,
 //   including published content.
 //
-// STUDENT:
+// SUBMITTER (STUDENT / FACULTY):
 //   Can delete only own pending/rejected content.
-//
-// PUBLISHED:
-//   HOD can delete if it belongs to his department.
 // =====================================================
 
 export const deleteMagazineContent = async (
@@ -1622,32 +1655,8 @@ export const deleteMagazineContent = async (
 ) => {
   try {
     const { id } = req.params;
-    const { userId } = req.body;
 
-    if (!id || !userId) {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Magazine content ID and user ID are required.",
-      });
-    }
-
-    // -------------------------------------------------
-    // FIND USER
-    // -------------------------------------------------
-
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found.",
-      });
-    }
-
-    // -------------------------------------------------
-    // FIND CONTENT
-    // -------------------------------------------------
+    const user = req.user;
 
     const content =
       await MagazineContent.findById(id);
@@ -1659,77 +1668,8 @@ export const deleteMagazineContent = async (
       });
     }
 
-    const role = String(
-      user.role || ""
-    )
-      .trim()
-      .toLowerCase();
-
-    // =================================================
-    // ADMIN
-    // =================================================
-
-    if (role === "admin") {
-      // Admin can delete anything.
-    }
-
-    // =================================================
-    // HOD
-    // =================================================
-
-    else if (role === "hod") {
-      const hodDepartment = String(
-        user.department || ""
-      ).trim();
-
-      const contentDepartment = String(
-        content.department || ""
-      ).trim();
-
-      if (!hodDepartment) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Department is not assigned to this HOD.",
-        });
-      }
-
-      if (
-        !contentDepartment ||
-        hodDepartment.toLowerCase() !==
-          contentDepartment.toLowerCase()
-      ) {
-        return res.status(403).json({
-          success: false,
-          message:
-            "You can delete only magazine content belonging to your department.",
-        });
-      }
-
-      // HOD can delete published content.
-    }
-
-    // =================================================
-    // STUDENT
-    // =================================================
-
-    else if (role === "student") {
-      const submittedEmail = String(
-        content.submittedBy?.email || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      const userEmail = String(
-        user.email || ""
-      )
-        .trim()
-        .toLowerCase();
-
-      if (
-        !submittedEmail ||
-        submittedEmail !== userEmail
-      ) {
+    if (!canReview(user, content)) {
+      if (!isOwner(user, content)) {
         return res.status(403).json({
           success: false,
           message:
@@ -1743,70 +1683,26 @@ export const deleteMagazineContent = async (
         return res.status(403).json({
           success: false,
           message:
-            "Published magazine content cannot be deleted by a student.",
+            "Published magazine content can be deleted only by its approver.",
         });
       }
     }
 
     // =================================================
-    // OTHER ROLES
+    // DELETE CLOUDINARY PHOTOS
     // =================================================
 
-    else {
-      return res.status(403).json({
-        success: false,
-        message:
-          "You do not have permission to delete magazine content.",
-      });
-    }
+    await deleteCloudinaryImage(
+      content.eventPhoto
+    );
 
-    // =================================================
-    // DELETE CLOUDINARY EVENT PHOTO
-    // =================================================
+    await deleteCloudinaryImage(
+      content.student?.photo
+    );
 
-    if (content.eventPhoto) {
-      try {
-        const publicId =
-          getCloudinaryPublicId(
-            content.eventPhoto
-          );
-
-        if (publicId) {
-          await cloudinary.uploader.destroy(
-            publicId
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Event photo deletion failed:",
-          error
-        );
-      }
-    }
-
-    // =================================================
-    // DELETE CLOUDINARY STUDENT PHOTO
-    // =================================================
-
-    if (content.student?.photo) {
-      try {
-        const publicId =
-          getCloudinaryPublicId(
-            content.student.photo
-          );
-
-        if (publicId) {
-          await cloudinary.uploader.destroy(
-            publicId
-          );
-        }
-      } catch (error) {
-        console.error(
-          "Student photo deletion failed:",
-          error
-        );
-      }
-    }
+    await deleteCloudinaryImage(
+      content.faculty?.photo
+    );
 
     // =================================================
     // DELETE MONGO DOCUMENT
@@ -1835,14 +1731,16 @@ export const deleteMagazineContent = async (
 };
 
 
-  // =====================================================
-// GET ALL MAGAZINE CONTENT FOR HOD'S DEPARTMENT
-// Includes:
-// - HOD created content
-// - Student created content
-// - Pending
-// - Rejected
-// - Published
+// =====================================================
+// GET ALL MAGAZINE CONTENT AN APPROVER REVIEWS
+//
+// HOD:
+//   everything of own department
+//
+// MAGAZINE COORDINATOR:
+//   everything at institute level
+//
+// Includes pending, rejected and published.
 // =====================================================
 
 export const getHODDepartmentMagazineContents = async (
@@ -1850,49 +1748,21 @@ export const getHODDepartmentMagazineContents = async (
   res
 ) => {
   try {
-    const { userId } = req.params;
+    const role = getRole(req.user);
 
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "User ID is required.",
-      });
-    }
-
-    // -------------------------------------------------
-    // FIND HOD
-    // -------------------------------------------------
-
-    const hod = await User.findById(userId);
-
-    if (!hod) {
-      return res.status(404).json({
-        success: false,
-        message: "HOD user not found.",
-      });
-    }
-
-    // -------------------------------------------------
-    // CHECK ROLE
-    // -------------------------------------------------
-
-    if (String(hod.role).toLowerCase() !== "hod") {
+    if (
+      !["hod", "mag_coordinator"].includes(role)
+    ) {
       return res.status(403).json({
         success: false,
         message:
-          "Only HOD can access department magazine content.",
+          "Only HOD or Magazine Coordinator can access this magazine content.",
       });
     }
 
-    // -------------------------------------------------
-    // GET HOD DEPARTMENT
-    // -------------------------------------------------
+    const filter = pendingFilterFor(req.user);
 
-    const department = String(
-      hod.department || ""
-    ).trim();
-
-    if (!department) {
+    if (!filter) {
       return res.status(400).json({
         success: false,
         message:
@@ -1900,24 +1770,23 @@ export const getHODDepartmentMagazineContents = async (
       });
     }
 
-    // -------------------------------------------------
-    // GET ALL CONTENT FOR THIS DEPARTMENT
-    // -------------------------------------------------
-
-    const contents = await MagazineContent.find({
-      department: department,
-    })
-      .populate("activity", "name")
+    const contents = await MagazineContent.find(
+      filter
+    )
+      .populate("activity", "name type")
       .sort({
-        magazineYear: -1,
-        magazineMonth: -1,
         eventDate: -1,
         createdAt: -1,
       });
 
     return res.status(200).json({
       success: true,
-      department,
+      department:
+        role === "hod"
+          ? normalizeDepartment(
+              req.user.department
+            )
+          : INSTITUTE_DEPARTMENT,
       count: contents.length,
       data: contents,
     });

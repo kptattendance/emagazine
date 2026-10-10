@@ -200,7 +200,7 @@ export default function AuthCheckPage() {
           case "mag_coordinator":
           
 
-            router.replace("/magazine");
+            router.replace("/coordinator");
             return;
 
           case "student":

@@ -123,7 +123,16 @@ export default function HODMagazineCreatePage() {
         activityResponse.data ||
         [];
 
-      setActivities(Array.isArray(activityData) ? activityData : []);
+      /*
+       This form is for department activity reports.
+      */
+      setActivities(
+        Array.isArray(activityData)
+          ? activityData.filter(
+              (activity) => activity.type !== "creative"
+            )
+          : []
+      );
     } catch (error) {
       console.error("HOD magazine create load error:", error);
 
@@ -319,7 +328,7 @@ export default function HODMagazineCreatePage() {
         confirmButtonColor: "#d4a017",
       });
 
-      router.push("/hod/magazine");
+      router.push("/hod");
       router.refresh();
     } catch (error) {
       console.error("HOD magazine create error:", error);
@@ -616,7 +625,7 @@ export default function HODMagazineCreatePage() {
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end sm:px-6">
             <button
               type="button"
-              onClick={() => router.push("/hod/magazine")}
+              onClick={() => router.push("/hod")}
               disabled={saving}
               className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >

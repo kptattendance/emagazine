@@ -3,6 +3,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+
+import {
+  DEPARTMENTS,
+  getDepartmentLabel,
+  normalizeDepartment,
+} from "../../lib/departments";
 import {
   Search,
   RefreshCw,
@@ -27,19 +33,6 @@ import {
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-const DEPARTMENTS = [
-  { value: "AE", label: "Automobile Engineering" },
-  { value: "CH", label: "Chemical Engineering" },
-  { value: "CE", label: "Civil Engineering" },
-  { value: "CS", label: "Computer Science & Engineering" },
-  { value: "EE", label: "Electrical & Electronics Engineering" },
-  { value: "EC", label: "Electronics & Communication Engineering" },
-  { value: "IN", label: "Institute" },
-  { value: "ME", label: "Mechanical Engineering" },
-  { value: "PT", label: "Polymer Technology" },
-  { value: "SC", label: "Science" },
-];
-
 const STATUS_OPTIONS = [
   { value: "published", label: "Published" },
   { value: "pending", label: "Pending" },
@@ -51,15 +44,8 @@ const LEVEL_OPTIONS = [
   { value: "institute", label: "Institute" },
 ];
 
-const getDepartmentName = (code) => {
-  const item = DEPARTMENTS.find(
-    (department) =>
-      department.value.toLowerCase() ===
-      String(code || "").trim().toLowerCase()
-  );
-
-  return item ? item.label : code || "—";
-};
+const getDepartmentName = (code) =>
+  code ? getDepartmentLabel(code) : "—";
 
 const getStatusStyle = (status) => {
   switch (String(status || "").toLowerCase()) {
@@ -173,6 +159,8 @@ export default function AdminMagazinePage() {
   const [monthFilter, setMonthFilter] = useState("all");
   const [submitterFilter, setSubmitterFilter] = useState("all");
 
+  const [activityNames, setActivityNames] = useState([]);
+
   const [selectedContent, setSelectedContent] = useState(null);
   const [deleteContent, setDeleteContent] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
@@ -211,12 +199,31 @@ export default function AdminMagazinePage() {
     }
   };
 
+  // Every activity and category, so the filter is complete
+  // even before any content uses them
+  const fetchActivities = async () => {
+    try {
+      const response = await axios.get(
+        `${API_URL}/api/activities`
+      );
+
+      setActivityNames(
+        (response.data?.data || []).map(
+          (activity) => activity.name
+        )
+      );
+    } catch (err) {
+      console.error("ADMIN ACTIVITIES FETCH ERROR:", err);
+    }
+  };
+
   useEffect(() => {
     fetchContents();
+    fetchActivities();
   }, []);
 
   const activityOptions = useMemo(() => {
-    const activities = contents
+    const usedNames = contents
       .map((item) => {
         if (typeof item.activity === "object") {
           return item.activity?.name;
@@ -226,10 +233,10 @@ export default function AdminMagazinePage() {
       })
       .filter(Boolean);
 
-    return [...new Set(activities)].sort((a, b) =>
-      a.localeCompare(b)
-    );
-  }, [contents]);
+    return [
+      ...new Set([...activityNames, ...usedNames]),
+    ].sort((a, b) => a.localeCompare(b));
+  }, [contents, activityNames]);
 
   const monthOptions = useMemo(() => {
     const months = contents
@@ -294,8 +301,9 @@ export default function AdminMagazinePage() {
       const registerNumber =
         item.student?.registerNumber || "";
 
-      const department =
-        String(item.department || "").trim();
+      const department = normalizeDepartment(
+        item.department
+      );
 
       const matchesSearch =
         !searchValue ||

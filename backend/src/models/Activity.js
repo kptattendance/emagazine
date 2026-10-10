@@ -9,6 +9,21 @@ const activitySchema = new mongoose.Schema(
       trim: true,
     },
 
+    /*
+    activity → college event / activity report
+    creative → own work (article, poem, drawing...)
+    */
+    type: {
+      type: String,
+      enum: ["activity", "creative"],
+      default: "activity",
+    },
+
+    imageRequired: {
+      type: Boolean,
+      default: true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,

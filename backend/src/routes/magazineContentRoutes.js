@@ -15,6 +15,10 @@ import {
   getHODDepartmentMagazineContents,
 } from "../controllers/magazineContentController.js";
 
+import requireAuth from "../middleware/authMiddleware.js";
+import resolveUser from "../middleware/resolveUser.js";
+import requireRole from "../middleware/roleMiddleware.js";
+
 const router = express.Router();
 
 const upload = multer({
@@ -42,21 +46,46 @@ const upload = multer({
 });
 
 
+const uploadPhotos = upload.fields([
+  {
+    name: "studentPhoto",
+    maxCount: 1,
+  },
+  {
+    name: "facultyPhoto",
+    maxCount: 1,
+  },
+  {
+    name: "eventPhoto",
+    maxCount: 1,
+  },
+]);
+
+
+/*
+Only the published list is public.
+Everything else needs a logged-in application user.
+*/
+
+router.get(
+  "/published",
+  getPublishedMagazineContents
+);
+
+router.use(requireAuth, resolveUser);
+
+
 router.post(
   "/",
-  upload.fields([
-    {
-      name: "studentPhoto",
-      maxCount: 1,
-    },
-    {
-      name: "eventPhoto",
-      maxCount: 1,
-    },
-  ]),
+  uploadPhotos,
   createMagazineContent
 );
 
+
+router.get(
+  "/my",
+  getMyMagazineContents
+);
 
 router.get(
   "/my/:userId",
@@ -65,8 +94,8 @@ router.get(
 
 
 router.get(
-  "/published",
-  getPublishedMagazineContents
+  "/review",
+  getHODDepartmentMagazineContents
 );
 
 
@@ -90,6 +119,7 @@ router.get(
 
 router.get(
   "/",
+  requireRole("admin"),
   getMagazineContents
 );
 
@@ -102,32 +132,14 @@ router.get(
 
 router.put(
   "/:id",
-  upload.fields([
-    {
-      name: "studentPhoto",
-      maxCount: 1,
-    },
-    {
-      name: "eventPhoto",
-      maxCount: 1,
-    },
-  ]),
+  uploadPhotos,
   updateMagazineContent
 );
 
 
 router.patch(
   "/:id",
-  upload.fields([
-    {
-      name: "studentPhoto",
-      maxCount: 1,
-    },
-    {
-      name: "eventPhoto",
-      maxCount: 1,
-    },
-  ]),
+  uploadPhotos,
   updateMagazineContent
 );
 

@@ -21,10 +21,21 @@ import {
   useState,
 } from "react";
 
+import { normalizeDepartment } from "../lib/departments";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
+const SECTIONS = [
+  { value: "all", label: "All" },
+  { value: "activity", label: "College Activities" },
+  { value: "creative", label: "Creative Corner" },
+];
+
 export default function MagazinePage() {
+  const [section, setSection] =
+    useState("all");
+
   const [selectedIssue, setSelectedIssue] =
     useState("all");
 
@@ -129,10 +140,14 @@ export default function MagazinePage() {
           const student =
             article.student || {};
 
+          const faculty =
+            article.faculty || {};
+
           const departmentName =
-            article.department ||
-            student.department ||
-            "IN";
+            normalizeDepartment(
+              article.department ||
+                student.department
+            ) || "IN";
 
           const issueMonth =
             article.magazineMonth ||
@@ -165,8 +180,18 @@ export default function MagazinePage() {
               Number(issueYear) ||
               null,
 
+            contentType:
+              article.contentType ||
+              "activity",
+
             studentName:
-              student.name || "",
+              student.name ||
+              faculty.name ||
+              "",
+
+            designation:
+              faculty.designation ||
+              "",
 
             registerNumber:
               student.registerNumber ||
@@ -177,7 +202,9 @@ export default function MagazinePage() {
               null,
 
             studentPhoto:
-              student.photo || "",
+              student.photo ||
+              faculty.photo ||
+              "",
 
             eventPhoto:
               article.eventPhoto || "",
@@ -200,20 +227,19 @@ export default function MagazinePage() {
 
   const issueArticles =
     useMemo(() => {
-      if (
-        selectedIssue === "all"
-      ) {
-        return normalizedArticles;
-      }
-
       return normalizedArticles.filter(
         (article) =>
-          getIssueKey(article) ===
-          selectedIssue
+          (selectedIssue === "all" ||
+            getIssueKey(article) ===
+              selectedIssue) &&
+          (section === "all" ||
+            article.contentType ===
+              section)
       );
     }, [
       normalizedArticles,
       selectedIssue,
+      section,
     ]);
 
   const issueInfo =
@@ -225,7 +251,7 @@ export default function MagazinePage() {
       }
 
       const article =
-        issueArticles.find(
+        normalizedArticles.find(
           (item) =>
             getIssueKey(item) ===
             selectedIssue
@@ -242,7 +268,7 @@ export default function MagazinePage() {
           article.issueYear,
       };
     }, [
-      issueArticles,
+      normalizedArticles,
       selectedIssue,
     ]);
 
@@ -450,6 +476,25 @@ export default function MagazinePage() {
       </section>
 
       <section className="mx-auto max-w-7xl px-5 py-8 sm:px-6">
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {SECTIONS.map((item) => (
+            <button
+              key={item.value}
+              type="button"
+              onClick={() =>
+                setSection(item.value)
+              }
+              className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+                section === item.value
+                  ? "bg-teal-700 text-white"
+                  : "border border-slate-200 bg-white text-slate-600 hover:border-teal-300 hover:text-teal-700"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
 
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px_auto]">
 
@@ -743,6 +788,7 @@ function ArticleCard({
                     `${article.semester}${getOrdinal(
                       article.semester
                     )} Semester`}
+                  {article.designation}
                 </p>
               </div>
 
@@ -928,6 +974,7 @@ function ArticleModal({
                           `${article.semester}${getOrdinal(
                             article.semester
                           )} Semester`}
+                        {article.designation}
                       </p>
                     </div>
 
@@ -1091,12 +1138,14 @@ function getDepartmentCode(
       .toUpperCase();
 
   const codes = {
-    AE: "AE",
+    AT: "AT",
+    AE: "AT",
     CE: "CE",
     ME: "ME",
     EE: "EE",
     CH: "CH",
-    PT: "PT",
+    PS: "PS",
+    PT: "PS",
     EC: "EC",
     CS: "CS",
     SC: "SC",
@@ -1110,7 +1159,7 @@ function getDepartmentCode(
   if (
     value.includes("AUTOMOBILE")
   ) {
-    return "AE";
+    return "AT";
   }
 
   if (
@@ -1140,7 +1189,7 @@ function getDepartmentCode(
   if (
     value.includes("POLYMER")
   ) {
-    return "PT";
+    return "PS";
   }
 
   if (
@@ -1191,11 +1240,13 @@ function getDepartmentLabel(
       .toUpperCase();
 
   const labels = {
+    AT: "Automobile Engineering",
     AE: "Automobile Engineering",
     CE: "Civil Engineering",
     ME: "Mechanical Engineering",
     EE: "Electrical & Electronics Engineering",
     CH: "Chemical Engineering",
+    PS: "Polymer Technology",
     PT: "Polymer Technology",
     EC: "Electronics & Communication Engineering",
     CS: "Computer Science & Engineering",

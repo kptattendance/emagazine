@@ -20,6 +20,19 @@ const magazineContentSchema = new mongoose.Schema(
       required: true,
     },
 
+    /*
+    Copied from the selected activity.
+
+    activity → college event / activity report
+    creative → own work (article, poem, drawing...)
+    */
+
+    contentType: {
+      type: String,
+      enum: ["activity", "creative"],
+      default: "activity",
+    },
+
     level: {
       type: String,
       enum: ["department", "institute"],
@@ -51,7 +64,7 @@ const magazineContentSchema = new mongoose.Schema(
 
     eventPhoto: {
       type: String,
-      required: true,
+      default: "",
     },
 
     /*
@@ -91,6 +104,34 @@ const magazineContentSchema = new mongoose.Schema(
       },
 
       phone: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+      photo: {
+        type: String,
+        default: "",
+      },
+    },
+
+    /*
+    =================================================
+    FACULTY DETAILS
+    =================================================
+
+    Filled only when the content is submitted
+    by a faculty member.
+    */
+
+    faculty: {
+      name: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+      designation: {
         type: String,
         default: "",
         trim: true,
