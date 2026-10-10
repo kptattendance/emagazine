@@ -27,6 +27,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@clerk/nextjs";
 
+import { normalizeDepartment } from "../../lib/departments";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const ROLES = [
@@ -438,6 +440,9 @@ export default function AdminUsersPage() {
       email: user.email || "",
       phone: user.phone || "",
       role: user.role || "",
+      department: normalizeDepartment(
+        user.department
+      ),
       isActive:
         user.isActive === true,
     });
@@ -591,6 +596,11 @@ if (!form.department) {
       return;
     }
 
+    if (!editForm.department) {
+      setError("Please select a department.");
+      return;
+    }
+
     try {
       setSaving(true);
 
@@ -612,6 +622,8 @@ if (!form.department) {
         phone: editForm.phone.trim(),
 
         role: editForm.role,
+
+        department: editForm.department,
 
         isActive: Boolean(
           editForm.isActive

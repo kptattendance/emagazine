@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://emagg.kptmangaluru.in"),
+  metadataBase: new URL("https://emag.kptmangaluru.in"),
 
   title: {
     default: "KPT Mangaluru eMagazine",
@@ -95,7 +95,7 @@ export const metadata = {
     type: "website",
     locale: "en_IN",
 
-    url: "https://emagg.kptmangaluru.in",
+    url: "https://emag.kptmangaluru.in",
 
     siteName: "KPT Mangaluru eMagazine",
 
@@ -127,7 +127,7 @@ export const metadata = {
   },
 
   alternates: {
-    canonical: "https://emagg.kptmangaluru.in",
+    canonical: "https://emag.kptmangaluru.in",
   },
 
   icons: {
@@ -149,7 +149,7 @@ const organizationSchema = {
     "Karnataka Government Polytechnic Mangalore",
   ],
 
-  url: "https://emagg.kptmangaluru.in",
+  url: "https://emag.kptmangaluru.in",
 
   description:
     "Karnataka Government Polytechnic Mangaluru eMagazine featuring institutional activities, departmental events, student achievements and other college activities.",
@@ -170,7 +170,7 @@ const websiteSchema = {
 
   alternateName: "KPT Mangalore eMagazine",
 
-  url: "https://emagg.kptmangaluru.in",
+  url: "https://emag.kptmangaluru.in",
 };
 
 export default function RootLayout({ children }) {

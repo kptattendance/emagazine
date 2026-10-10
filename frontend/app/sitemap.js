@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const baseUrl = "https://emagg.kptmangaluru.in";
+  const baseUrl = "https://emag.kptmangaluru.in";
 
   return [
     {

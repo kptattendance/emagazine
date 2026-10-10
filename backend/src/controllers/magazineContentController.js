@@ -1,6 +1,7 @@
 import MagazineContent from "../models/MagazineContent.js";
 import Activity from "../models/Activity.js";
 import cloudinary from "../config/cloudinary.js";
+import { WATERMARK } from "../config/watermark.js";
 
 import {
   DEPARTMENTS,
@@ -15,12 +16,17 @@ CLOUDINARY UPLOAD
 =====================================================
 */
 
-const uploadToCloudinary = (file, folder) => {
+const uploadToCloudinary = (
+  file,
+  folder,
+  transformation
+) => {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder,
         resource_type: "image",
+        ...(transformation && { transformation }),
       },
       (error, result) => {
         if (error) {
@@ -474,7 +480,8 @@ export const createMagazineContent = async (
       const eventPhotoUpload =
         await uploadToCloudinary(
           req.files.eventPhoto[0],
-          "kpt-emagazine/magazine/events"
+          "kpt-emagazine/magazine/events",
+          WATERMARK
         );
 
       eventPhotoUrl =
@@ -1353,7 +1360,8 @@ export const updateMagazineContent =
         const uploaded =
           await uploadToCloudinary(
             req.files.eventPhoto[0],
-            "kpt-emagazine/magazine/events"
+            "kpt-emagazine/magazine/events",
+            WATERMARK
           );
 
         content.eventPhoto =
