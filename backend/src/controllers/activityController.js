@@ -46,7 +46,6 @@ export const deleteActivity = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete activity.",
-      error: error.message,
     });
   }
 };
@@ -135,7 +134,6 @@ export const deleteMultipleActivities = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete selected activities.",
-      error: error.message,
     });
   }
 };
@@ -163,7 +161,6 @@ export const getActivities = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch activities.",
-      error: error.message,
     });
   }
 };
@@ -195,7 +192,6 @@ export const getActiveActivities = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch active activities.",
-      error: error.message,
     });
   }
 };
@@ -228,7 +224,6 @@ export const getActivityById = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to fetch activity.",
-      error: error.message,
     });
   }
 };
@@ -306,7 +301,6 @@ export const createActivity = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to create activity.",
-      error: error.message,
     });
   }
 };
@@ -395,7 +389,6 @@ export const updateActivity = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update activity.",
-      error: error.message,
     });
   }
 };
@@ -437,7 +430,6 @@ export const toggleActivity = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to change activity status.",
-      error: error.message,
     });
   }
 };

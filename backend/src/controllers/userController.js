@@ -204,7 +204,6 @@ export const createUser = async (req, res) => {
       success: false,
       message:
         "Failed to create user.",
-      error: error.message,
     });
   }
 };
@@ -326,7 +325,6 @@ export const createMyUser = async (
       success: false,
       message:
         "Failed to create application user.",
-      error: error.message,
     });
   }
 };
@@ -372,7 +370,6 @@ export const getMyUser = async (
       success: false,
       message:
         "Failed to fetch user.",
-      error: error.message,
     });
   }
 };
@@ -493,7 +490,6 @@ export const getAllUsers = async (
       success: false,
       message:
         "Failed to fetch users.",
-      error: error.message,
     });
   }
 };
@@ -530,7 +526,6 @@ export const getUserById = async (
       success: false,
       message:
         "Failed to fetch user.",
-      error: error.message,
     });
   }
 };
@@ -612,7 +607,6 @@ export const updateMyUser = async (
       success: false,
       message:
         "Failed to update profile.",
-      error: error.message,
     });
   }
 };
@@ -754,7 +748,6 @@ export const updateUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to update user.",
-      error: error.message,
     });
   }
 };
@@ -828,7 +821,6 @@ export const updateUserRole = async (
       success: false,
       message:
         "Failed to update user role.",
-      error: error.message,
     });
   }
 };
@@ -918,7 +910,6 @@ export const toggleUserStatus = async (
       success: false,
       message:
         "Failed to change user status.",
-      error: error.message,
     });
   }
 };
@@ -1004,7 +995,6 @@ export const deleteUser = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to delete user.",
-      error: error.message,
     });
   }
 };
@@ -1151,7 +1141,6 @@ export const deleteMultipleUsers = async (req, res) => {
       success: false,
       message:
         "Failed to delete selected users.",
-      error: error.message,
     });
   }
 };
@@ -1198,7 +1187,6 @@ export const restoreUser = async (
       success: false,
       message:
         "Failed to restore user.",
-      error: error.message,
     });
   }
 };

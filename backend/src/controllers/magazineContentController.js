@@ -691,7 +691,6 @@ export const createMagazineContent = async (
       success: false,
       message:
         "Failed to create magazine content.",
-      error: error.message,
     });
   }
 };
@@ -738,7 +737,6 @@ export const getMagazineContents = async (
       success: false,
       message:
         "Failed to fetch magazine contents.",
-      error: error.message,
     });
   }
 };
@@ -793,7 +791,6 @@ export const getMyMagazineContents = async (
       success: false,
       message:
         "Failed to fetch your magazine contents.",
-      error: error.message,
     });
   }
 };
@@ -843,7 +840,6 @@ export const getPublishedMagazineContents =
         success: false,
         message:
           "Failed to fetch published content.",
-        error: error.message,
       });
     }
   };
@@ -915,7 +911,6 @@ export const getPendingMagazineContents = async (req, res) => {
       success: false,
       message:
         "Failed to fetch pending content.",
-      error: error.message,
     });
   }
 };
@@ -977,7 +972,6 @@ export const getMagazineContentById =
         success: false,
         message:
           "Failed to fetch magazine content.",
-        error: error.message,
       });
     }
   };
@@ -1433,7 +1427,6 @@ export const updateMagazineContent =
         success: false,
         message:
           "Failed to update magazine content.",
-        error: error.message,
       });
     }
   };
@@ -1526,7 +1519,6 @@ export const approveMagazineContent = async (
       success: false,
       message:
         "Failed to approve magazine content.",
-      error: error.message,
     });
   }
 };
@@ -1633,7 +1625,6 @@ export const rejectMagazineContent = async (
       success: false,
       message:
         "Failed to reject magazine content.",
-      error: error.message,
     });
   }
 };
@@ -1725,7 +1716,6 @@ export const deleteMagazineContent = async (
       success: false,
       message:
         "Failed to delete magazine content.",
-      error: error.message,
     });
   }
 };
@@ -1800,7 +1790,6 @@ export const getHODDepartmentMagazineContents = async (
       success: false,
       message:
         "Failed to load department magazine content.",
-      error: error.message,
     });
   }
 };
