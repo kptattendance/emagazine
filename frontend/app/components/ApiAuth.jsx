@@ -43,6 +43,48 @@ axios.interceptors.request.use(async (config) => {
 
 /*
 ============================================================
+A login token lives for about a minute. If the backend
+rejects one, ask Clerk for a brand new token and send the
+request once more before showing an error.
+============================================================
+*/
+
+axios.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+
+    const isApiRequest =
+      Boolean(API_URL) &&
+      String(config?.url || "").startsWith(API_URL);
+
+    if (
+      error.response?.status !== 401 ||
+      !isApiRequest ||
+      config.retriedWithFreshToken
+    ) {
+      throw error;
+    }
+
+    const token = getClerkToken
+      ? await getClerkToken({ skipCache: true })
+      : await window.Clerk?.session?.getToken({
+          skipCache: true,
+        });
+
+    if (!token) {
+      throw error;
+    }
+
+    config.retriedWithFreshToken = true;
+    config.headers.Authorization = `Bearer ${token}`;
+
+    return axios(config);
+  }
+);
+
+/*
+============================================================
 Every photo sent to the backend is shrunk first,
 whichever form it comes from.
 ============================================================
