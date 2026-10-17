@@ -91,7 +91,7 @@ whichever form it comes from.
 */
 
 // Small portrait photos shown next to the content
-const PORTRAIT_FIELDS = ["studentPhoto", "facultyPhoto"];
+const PORTRAIT_FIELDS = ["studentPhoto", "facultyPhoto", "photo"];
 
 axios.interceptors.request.use(async (config) => {
   if (

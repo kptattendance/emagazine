@@ -15,6 +15,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { normalizeDepartment } from "./lib/departments";
+import MagazineTeam from "./components/MagazineTeam";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -408,7 +409,11 @@ export default function HomePage() {
               </div>
 
               <p className="mt-4 font-bold text-slate-700">
-                No magazine issues published yet.
+                {loading
+                  ? "Loading magazine issues..."
+                  : error
+                    ? "Unable to load magazine issues."
+                    : "No magazine issues published yet."}
               </p>
 
             </div>
@@ -824,6 +829,8 @@ export default function HomePage() {
         </div>
 
       </section>
+      <MagazineTeam />
+
 <footer className="border-t border-slate-200 bg-white">
   <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
     <p className="text-center text-[11px] leading-5 text-slate-400 sm:text-xs">

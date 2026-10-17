@@ -14,12 +14,16 @@ import {
   Menu,
   Newspaper,
   PenLine,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /*
 ============================================================
@@ -56,6 +60,11 @@ const PANELS = {
         href: "/admin/users",
         icon: Users,
       },
+      {
+        label: "Magazine Team",
+        href: "/admin/team",
+        icon: UserRound,
+      },
     ],
   },
 
@@ -77,6 +86,13 @@ const PANELS = {
         label: "New Submission",
         href: "/hod/newSubmission",
         icon: PenLine,
+      },
+      {
+        label: "Magazine Team",
+        href: "/hod/team",
+        icon: UserRound,
+        // Only the institute HOD (the magazine office) manages the team
+        instituteOnly: true,
       },
     ],
   },
@@ -122,9 +138,32 @@ const PANELS = {
 };
 
 export default function PanelSidebar({ panel }) {
-  const { name, role, menuItems } = PANELS[panel];
+  const { name, role, menuItems: allMenuItems } = PANELS[panel];
 
-  const homeHref = menuItems[0].href;
+  const homeHref = allMenuItems[0].href;
+
+  const [department, setDepartment] = useState("");
+
+  const needsDepartment = allMenuItems.some(
+    (item) => item.instituteOnly
+  );
+
+  useEffect(() => {
+    if (!needsDepartment) return;
+
+    axios
+      .get(`${API_URL}/api/users/me`)
+      .then((response) =>
+        setDepartment(
+          String(response.data?.data?.department || "").toUpperCase()
+        )
+      )
+      .catch(() => setDepartment(""));
+  }, [needsDepartment]);
+
+  const menuItems = allMenuItems.filter(
+    (item) => !item.instituteOnly || department === "IN"
+  );
 
   const pathname = usePathname();
   const { user } = useUser();

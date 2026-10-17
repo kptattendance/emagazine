@@ -11,6 +11,7 @@ import {
 import activityRoutes from "./routes/activityRoutes.js";
 import magazineContentRoutes from "./routes/magazineContentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import teamRoutes from "./routes/teamRoutes.js";
 import connectDB from "./config/db.js";
 
 dotenv.config();
@@ -98,6 +99,8 @@ app.use(
   "/api/users",
   userRoutes
 );
+
+app.use("/api/team", teamRoutes);
 
 // --------------------------------------------------
 // Unknown route
