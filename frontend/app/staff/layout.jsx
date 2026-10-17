@@ -8,7 +8,12 @@ export const metadata = {
   description: "KPT Mangaluru faculty dashboard.",
 };
 
-const ALLOWED_ROLES = ["staff"];
+// Department coordinators and club in-charges are faculty too
+const ALLOWED_ROLES = [
+  "staff",
+  "dept_coordinator",
+  "club_incharge",
+];
 
 export default function FacultyLayout({ children }) {
   return (

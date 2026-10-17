@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import { useAuth } from "@clerk/nextjs";
 
 import { getDepartmentLabel } from "../lib/departments";
+import { statusLabel } from "../lib/approvalStatus";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -15,12 +16,6 @@ const STATUS_STYLES = {
   pending: "bg-amber-100 text-amber-700",
   rejected: "bg-red-100 text-red-700",
   published: "bg-emerald-100 text-emerald-700",
-};
-
-const STATUS_LABELS = {
-  pending: "Pending Approval",
-  rejected: "Rejected",
-  published: "Published",
 };
 
 /*
@@ -197,8 +192,7 @@ export default function SubmissionList({
                           STATUS_STYLES[content.status] || ""
                         }`}
                       >
-                        {STATUS_LABELS[content.status] ||
-                          content.status}
+                        {statusLabel(content)}
                       </span>
                     </div>
 

@@ -95,7 +95,13 @@ const getSubmitterRole = (role) => {
       return "Admin";
 
     case "mag_coordinator":
-      return "Magazine Coordinator";
+      return "Magazine Institute Coordinator";
+
+    case "dept_coordinator":
+      return "Department Coordinator";
+
+    case "club_incharge":
+      return "Club In-charge";
 
     case "principal":
       return "Principal";

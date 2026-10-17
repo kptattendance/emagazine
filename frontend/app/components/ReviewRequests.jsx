@@ -8,6 +8,7 @@ import Swal from "sweetalert2";
 import { useAuth } from "@clerk/nextjs";
 
 import { getDepartmentLabel } from "../lib/departments";
+import { statusLabel } from "../lib/approvalStatus";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -27,6 +28,7 @@ export default function ReviewRequests({
   emptyText,
   studentEditBasePath,
   facultyEditBasePath,
+  approveLabel = "Approve & Publish",
 }) {
   const router = useRouter();
 
@@ -77,9 +79,12 @@ export default function ReviewRequests({
     const result = await Swal.fire({
       icon: "question",
       title: "Approve this content?",
-      text: "Once approved, it will be published and the submitter will no longer be able to edit it.",
+      text:
+        approveLabel === "Approve & Publish"
+          ? "Once approved, it will be published and the submitter will no longer be able to edit it."
+          : "It will be sent to the HOD, who publishes it.",
       showCancelButton: true,
-      confirmButtonText: "Approve & Publish",
+      confirmButtonText: approveLabel,
       cancelButtonText: "Cancel",
       confirmButtonColor: "#16a34a",
     });
@@ -91,14 +96,16 @@ export default function ReviewRequests({
     try {
       setProcessingId(content._id);
 
-      await axios.patch(
+      const response = await axios.patch(
         `${API_URL}/api/magazine-content/${content._id}/approve`
       );
 
       await Swal.fire({
         icon: "success",
-        title: "Published",
-        text: "Magazine content has been approved and published.",
+        title: "Approved",
+        text:
+          response.data?.message ||
+          "Magazine content has been approved.",
         confirmButtonColor: "#d4a017",
       });
 
@@ -274,7 +281,7 @@ export default function ReviewRequests({
                     </div>
 
                     <span className="w-fit rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
-                      Pending Approval
+                      {statusLabel(content)}
                     </span>
                   </div>
                 </div>
@@ -360,6 +367,15 @@ export default function ReviewRequests({
                         </span>{" "}
                         {content.submittedBy?.email || "-"}
                       </p>
+
+                      {content.coordinatorApproval?.name && (
+                        <p className="rounded-lg bg-emerald-50 px-3 py-2 text-emerald-700">
+                          Approved by department coordinator{" "}
+                          <span className="font-semibold">
+                            {content.coordinatorApproval.name}
+                          </span>
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -419,7 +435,7 @@ export default function ReviewRequests({
                     >
                       {processingId === content._id
                         ? "Processing..."
-                        : "Approve & Publish"}
+                        : approveLabel}
                     </button>
 
                     <button

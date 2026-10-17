@@ -38,6 +38,8 @@ const userSchema = new mongoose.Schema(
         "principal",
         "staff",
         "mag_coordinator",
+        "dept_coordinator",
+        "club_incharge",
         "student",
       ],
       default: "student",

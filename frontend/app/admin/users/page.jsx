@@ -50,7 +50,15 @@ const ROLES = [
   },
   {
     value: "mag_coordinator",
-    label: "Magazine Coordinator",
+    label: "Magazine Institute Coordinator",
+  },
+  {
+    value: "dept_coordinator",
+    label: "Department Coordinator",
+  },
+  {
+    value: "club_incharge",
+    label: "Club In-charge",
   },
   {
     value: "student",
@@ -141,10 +149,26 @@ const getRoleStyle = (role) => {
 
     case "mag_coordinator":
       return {
-        label: "Magazine Coordinator",
+        label: "Magazine Institute Coordinator",
         className:
           "bg-teal-50 text-teal-700 border-teal-200",
         icon: BookOpen,
+      };
+
+    case "dept_coordinator":
+      return {
+        label: "Department Coordinator",
+        className:
+          "bg-cyan-50 text-cyan-700 border-cyan-200",
+        icon: BookOpen,
+      };
+
+    case "club_incharge":
+      return {
+        label: "Club In-charge",
+        className:
+          "bg-rose-50 text-rose-700 border-rose-200",
+        icon: BriefcaseBusiness,
       };
 
     case "student":

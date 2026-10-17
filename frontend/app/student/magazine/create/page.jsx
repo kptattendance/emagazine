@@ -1275,10 +1275,10 @@ useEffect(() => {
                 </p>
 
                 <p className="mt-1 text-sm leading-6 text-slate-600">
-                  After submission, the content will be sent to the
-                  concerned HOD for approval before it is published
-                  in the eMagazine. Institute level content is approved
-                  by the Magazine Coordinator.
+                  After submission, your department coordinator checks
+                  it first, then the HOD approves it for the eMagazine.
+                  Institute level content is approved by the Magazine
+                  Institute Coordinator.
                 </p>
               </div>
             </div>

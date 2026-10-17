@@ -41,6 +41,27 @@ const isInstituteContent = (content) =>
   normalizeDepartment(content.department) ===
     INSTITUTE_DEPARTMENT;
 
+const DEPT_COORDINATOR = "dept_coordinator";
+const CLUB_INCHARGE = "club_incharge";
+
+// Faculty roles: they give name and designation with a submission
+const FACULTY_ROLES = ["staff", DEPT_COORDINATOR, CLUB_INCHARGE];
+
+const sameDepartment = (user, content) => {
+  const userDepartment = normalizeDepartment(user.department);
+
+  return (
+    Boolean(userDepartment) &&
+    userDepartment === normalizeDepartment(content.department)
+  );
+};
+
+/*
+Final approval: publishes the content.
+The HOD may also approve student content that is still
+waiting for the department coordinator, so nothing gets
+stuck in a department without a coordinator.
+*/
 const canReview = (user, content) => {
   const role = getRole(user);
 
@@ -53,18 +74,28 @@ const canReview = (user, content) => {
   }
 
   if (role === "hod") {
-    const hodDepartment =
-      normalizeDepartment(user.department);
-
-    return (
-      Boolean(hodDepartment) &&
-      hodDepartment ===
-        normalizeDepartment(content.department)
-    );
+    return sameDepartment(user, content);
   }
 
   return false;
 };
+
+/*
+First step for student content: the department
+coordinator approves and forwards it to the HOD.
+*/
+const canCoordinatorReview = (user, content) =>
+  getRole(user) === DEPT_COORDINATOR &&
+  content.status === "pending" &&
+  content.approvalStage === "department_coordinator" &&
+  !isInstituteContent(content) &&
+  sameDepartment(user, content);
+
+// Where new or resubmitted content starts
+const initialStage = (submitterRole, content) =>
+  submitterRole === "student" && !isInstituteContent(content)
+    ? "department_coordinator"
+    : "final";
 
 const isOwner = (user, content) => {
   const submittedEmail = String(
@@ -88,8 +119,10 @@ const isStudentContent = (content) =>
 
 const getApproverLabel = (content) =>
   isInstituteContent(content)
-    ? "Magazine Coordinator"
-    : "HOD";
+    ? "Magazine Institute Coordinator"
+    : content.approvalStage === "department_coordinator"
+      ? "Department Coordinator"
+      : "HOD";
 
 const pendingFilterFor = (user) => {
   const role = getRole(user);
@@ -112,6 +145,16 @@ const pendingFilterFor = (user) => {
       department: {
         $in: departmentAliases(user.department),
       },
+    };
+  }
+
+  if (role === DEPT_COORDINATOR && user.department) {
+    return {
+      department: {
+        $in: departmentAliases(user.department),
+      },
+      level: { $ne: "institute" },
+      approvalStage: "department_coordinator",
     };
   }
 
@@ -161,6 +204,12 @@ export const createMagazineContent = async (
     let department = normalizeDepartment(
       req.body.department
     );
+
+    // Club activities are always reviewed by the institute coordinator
+    if (getRole(user) === CLUB_INCHARGE) {
+      level = "institute";
+      department = INSTITUTE_DEPARTMENT;
+    }
 
 
     /*
@@ -280,7 +329,7 @@ export const createMagazineContent = async (
 
     const isStudent = role === "student";
 
-    const isStaff = role === "staff";
+    const isStaff = FACULTY_ROLES.includes(role);
 
 
     /*
@@ -454,6 +503,11 @@ export const createMagazineContent = async (
       ? "published"
       : "pending";
 
+    const approvalStage =
+      status === "published"
+        ? "final"
+        : initialStage(role, { level, department });
+
 
     /*
     =================================================
@@ -559,6 +613,8 @@ export const createMagazineContent = async (
         submittedBy,
 
         status,
+
+        approvalStage,
 
         approvedBy:
           status === "published"
@@ -876,7 +932,8 @@ export const getMagazineContentById =
       if (
         content.status !== "published" &&
         !isOwner(req.user, content) &&
-        !canReview(req.user, content)
+        !canReview(req.user, content) &&
+        !canCoordinatorReview(req.user, content)
       ) {
         return res.status(403).json({
           success: false,
@@ -989,7 +1046,8 @@ export const updateMagazineContent =
 
       if (
         !isOwner(user, content) &&
-        !canReview(user, content)
+        !canReview(user, content) &&
+        !canCoordinatorReview(user, content)
       ) {
         return res.status(403).json({
           success: false,
@@ -1320,6 +1378,26 @@ export const updateMagazineContent =
         content.approvedAt = null;
       }
 
+      /*
+      When the submitter changes their own content, it goes
+      through the full approval again.
+      */
+
+      if (
+        content.status === "pending" &&
+        isOwner(user, content)
+      ) {
+        content.approvalStage = initialStage(
+          getRole(content.submittedBy),
+          content
+        );
+
+        content.coordinatorApproval = {
+          name: "",
+          approvedAt: null,
+        };
+      }
+
 
       /*
       =================================================
@@ -1396,6 +1474,31 @@ export const approveMagazineContent = async (
       });
     }
 
+    /*
+    Department coordinator: forward to the HOD
+    */
+
+    if (
+      !canReview(approver, content) &&
+      canCoordinatorReview(approver, content)
+    ) {
+      content.approvalStage = "final";
+
+      content.coordinatorApproval = {
+        name: approver.name || "",
+        approvedAt: new Date(),
+      };
+
+      await content.save();
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Approved and sent to the HOD for publishing.",
+        data: content,
+      });
+    }
+
     if (!canReview(approver, content)) {
       return res.status(403).json({
         success: false,
@@ -1407,6 +1510,8 @@ export const approveMagazineContent = async (
 
     content.status =
       "published";
+
+    content.approvalStage = "final";
 
     content.approvedBy = {
       name:
@@ -1502,7 +1607,10 @@ export const rejectMagazineContent = async (
       });
     }
 
-    if (!canReview(approver, content)) {
+    if (
+      !canReview(approver, content) &&
+      !canCoordinatorReview(approver, content)
+    ) {
       return res.status(403).json({
         success: false,
         message: `Only the ${getApproverLabel(

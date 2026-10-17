@@ -1,12 +1,17 @@
 import mongoose from "mongoose";
 
 import { DEPARTMENTS } from "../config/departments.js";
+import {
+  DESIGNATIONS,
+  STUDENT_YEARS,
+  TEAM_POSITIONS,
+} from "../config/teamPositions.js";
 
 /*
 Magazine team shown on the home page.
 
 Faculty:  name, designation, department, photo
-Student:  name, register number, semester, department, photo
+Student:  name, register number, year, department, photo
 */
 
 const teamMemberSchema = new mongoose.Schema(
@@ -23,11 +28,11 @@ const teamMemberSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Role in the magazine, e.g. Chief Editor, Student Coordinator
+    // Role in the magazine, decides where the member is shown
     position: {
       type: String,
-      default: "",
-      trim: true,
+      enum: TEAM_POSITIONS.map((item) => item.value),
+      required: true,
     },
 
     department: {
@@ -36,10 +41,11 @@ const teamMemberSchema = new mongoose.Schema(
       required: true,
     },
 
+    // Faculty only
     designation: {
       type: String,
+      enum: ["", ...DESIGNATIONS],
       default: "",
-      trim: true,
     },
 
     registerNumber: {
@@ -49,8 +55,11 @@ const teamMemberSchema = new mongoose.Schema(
       uppercase: true,
     },
 
-    semester: {
+    // Students only: year of study
+    year: {
       type: Number,
+      min: Math.min(...STUDENT_YEARS),
+      max: Math.max(...STUDENT_YEARS),
       default: null,
     },
 

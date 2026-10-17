@@ -197,6 +197,11 @@ export default function AuthCheckPage() {
             router.replace("/staff");
             return;
 
+          case "dept_coordinator":
+          case "club_incharge":
+            router.replace("/staff");
+            return;
+
           case "mag_coordinator":
           
 

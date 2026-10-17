@@ -6,6 +6,7 @@ import axios from "axios";
 import { GraduationCap, UserRound, Users } from "lucide-react";
 
 import { getDepartmentLabel } from "../lib/departments";
+import { TEAM_TIERS, positionRank } from "../lib/teamPositions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -14,7 +15,10 @@ const ordinal = (number) =>
 
 /*
 ============================================================
-Home page section listing the magazine team.
+Home page section listing the magazine team, level by level:
+Principal and Academic Dean, institute coordinator,
+department coordinators, student coordinators.
+
 Hidden until at least one member has been added.
 ============================================================
 */
@@ -45,25 +49,22 @@ export default function MagazineTeam() {
     return null;
   }
 
-  const groups = [
-    {
-      title: "Faculty Coordinators",
-      items: members.filter((m) => m.memberType === "faculty"),
-    },
-    {
-      title: "Student Coordinators",
-      items: members.filter((m) => m.memberType === "student"),
-    },
-  ].filter((group) => group.items.length > 0);
+  // The server already sends members in display order
+  const tiers = TEAM_TIERS.map((tier) => ({
+    ...tier,
+    items: members.filter(
+      (member) => positionRank(member.position) === tier.rank
+    ),
+  })).filter((tier) => tier.items.length > 0);
 
   return (
     <section
       id="team"
-      className="border-b border-slate-200 bg-[#f7faf9]"
+      className="border-b border-slate-200 bg-gradient-to-b from-white via-teal-50/40 to-white"
     >
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="mb-7">
-          <div className="mb-2 flex items-center gap-2 text-teal-700">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
+        <div className="mb-10 text-center">
+          <div className="mb-2 flex items-center justify-center gap-2 text-teal-700">
             <Users size={17} />
 
             <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] sm:text-xs">
@@ -76,70 +77,85 @@ export default function MagazineTeam() {
           </h2>
         </div>
 
-        <div className="space-y-8">
-          {groups.map((group) => (
-            <div key={group.title}>
-              <h3 className="mb-4 text-xs font-bold uppercase tracking-widest text-slate-400">
-                {group.title}
-              </h3>
+        <div className="space-y-10">
+          {tiers.map((tier) => (
+            <div key={tier.rank}>
+              <div className="mb-5 flex items-center gap-4">
+                <span className="h-px flex-1 bg-slate-200" />
 
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {group.items.map((member) => {
-                  const isStudent = member.memberType === "student";
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                  {tier.title}
+                </h3>
 
-                  return (
-                    <div
-                      key={member._id}
-                      className="group overflow-hidden rounded-3xl border border-slate-200 bg-white text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
-                    >
-                      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900">
-                        {member.photo ? (
-                          <img
-                            src={member.photo}
-                            alt={member.name}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center text-white/40">
-                            {isStudent ? (
-                              <GraduationCap size={52} />
-                            ) : (
-                              <UserRound size={52} />
-                            )}
-                          </div>
-                        )}
+                <span className="h-px flex-1 bg-slate-200" />
+              </div>
 
-                        {member.position && (
-                          <span className="absolute inset-x-3 bottom-3 truncate rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-teal-800 shadow-sm">
-                            {member.position}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="p-4">
-                        <p className="truncate text-sm font-black text-slate-900 sm:text-base">
-                          {member.name}
-                        </p>
-
-                        <p className="mt-1 truncate text-xs text-slate-500">
-                          {isStudent
-                            ? `${member.registerNumber} · ${member.semester}${ordinal(member.semester)} Sem`
-                            : member.designation}
-                        </p>
-
-                        <p className="mt-0.5 truncate text-xs font-semibold text-teal-700">
-                          {getDepartmentLabel(member.department)}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="flex flex-wrap justify-center gap-4 sm:gap-5">
+                {tier.items.map((member) => (
+                  <MemberCard
+                    key={member._id}
+                    member={member}
+                    large={tier.rank <= 2}
+                  />
+                ))}
               </div>
             </div>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function MemberCard({ member, large }) {
+  const isStudent = member.memberType === "student";
+
+  return (
+    <div
+      className={`group overflow-hidden rounded-3xl border border-slate-200 bg-white text-center shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
+        large
+          ? "w-[calc(50%-0.5rem)] sm:w-60"
+          : "w-[calc(50%-0.5rem)] sm:w-52"
+      }`}
+    >
+      <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900">
+        {member.photo ? (
+          <img
+            src={member.photo}
+            alt={member.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-white/40">
+            {isStudent ? (
+              <GraduationCap size={52} />
+            ) : (
+              <UserRound size={52} />
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="p-4">
+        <p className="truncate text-sm font-black text-slate-900 sm:text-base">
+          {member.name}
+        </p>
+
+        <p className="mt-1 line-clamp-2 text-[11px] font-bold uppercase leading-4 tracking-wide text-teal-700">
+          {member.position}
+        </p>
+
+        <p className="mt-2 truncate text-xs text-slate-500">
+          {isStudent
+            ? `${member.registerNumber} · ${member.year}${ordinal(member.year)} Year`
+            : member.designation}
+        </p>
+
+        <p className="mt-0.5 truncate text-xs text-slate-500">
+          {getDepartmentLabel(member.department)}
+        </p>
+      </div>
+    </div>
   );
 }

@@ -181,10 +181,11 @@ export default function SubmissionForm({
 
       setForm((previous) => ({
         ...previous,
-        department:
-          userData.role === "mag_coordinator"
-            ? INSTITUTE_DEPARTMENT
-            : normalizeDepartment(userData.department),
+        department: ["mag_coordinator", "club_incharge"].includes(
+          userData.role
+        )
+          ? INSTITUTE_DEPARTMENT
+          : normalizeDepartment(userData.department),
         facultyName: userData.name || "",
         designation: lastDesignation,
       }));
@@ -660,7 +661,9 @@ export default function SubmissionForm({
                 name="department"
                 value={form.department}
                 onChange={handleChange}
-                className={inputClass}
+                // Club activities are always institute level
+                disabled={userRole === "club_incharge"}
+                className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-600`}
               >
                 <option value="">Select Department</option>
 

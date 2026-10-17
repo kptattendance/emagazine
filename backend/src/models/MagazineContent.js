@@ -192,6 +192,35 @@ const magazineContentSchema = new mongoose.Schema(
     },
 
     /*
+    Who has to act on pending content next.
+
+    department_coordinator → student content waiting for the
+                             department coordinator
+    final                  → waiting for the HOD (or the
+                             institute coordinator)
+    */
+
+    approvalStage: {
+      type: String,
+      enum: ["department_coordinator", "final"],
+      default: "final",
+    },
+
+    // Filled when the department coordinator forwards it
+    coordinatorApproval: {
+      name: {
+        type: String,
+        default: "",
+        trim: true,
+      },
+
+      approvedAt: {
+        type: Date,
+        default: null,
+      },
+    },
+
+    /*
     =================================================
     APPROVAL INFORMATION
     =================================================

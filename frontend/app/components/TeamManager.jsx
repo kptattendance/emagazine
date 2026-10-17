@@ -21,6 +21,17 @@ import {
   getDepartmentLabel,
 } from "../lib/departments";
 
+import {
+  DESIGNATIONS,
+  STUDENT_YEARS,
+  TEAM_TIERS,
+  positionRank,
+  positionsFor,
+} from "../lib/teamPositions";
+
+const ordinal = (number) =>
+  ({ 1: "st", 2: "nd", 3: "rd" })[number] || "th";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const inputClass =
@@ -36,7 +47,7 @@ const EMPTY_FORM = {
   department: "",
   designation: "",
   registerNumber: "",
-  semester: "",
+  year: "",
   order: 0,
 };
 
@@ -108,7 +119,7 @@ export default function TeamManager() {
       department: member.department || "",
       designation: member.designation || "",
       registerNumber: member.registerNumber || "",
-      semester: member.semester ? String(member.semester) : "",
+      year: member.year ? String(member.year) : "",
       order: member.order ?? 0,
     });
 
@@ -160,14 +171,16 @@ export default function TeamManager() {
 
     const missing = !form.name.trim()
       ? "Please enter the name."
+      : !form.position
+        ? "Please select the role in the magazine."
       : !form.department
         ? "Please select the department."
-        : isFaculty && !form.designation.trim()
-          ? "Please enter the designation."
+        : isFaculty && !form.designation
+          ? "Please select the designation."
           : !isFaculty && !form.registerNumber.trim()
             ? "Please enter the register number."
-            : !isFaculty && !form.semester
-              ? "Please select the semester."
+            : !isFaculty && !form.year
+              ? "Please select the year."
               : null;
 
     if (missing) {
@@ -262,16 +275,12 @@ export default function TeamManager() {
      PAGE
   ========================================================= */
 
-  const groups = [
-    {
-      title: "Faculty",
-      items: members.filter((m) => m.memberType === "faculty"),
-    },
-    {
-      title: "Students",
-      items: members.filter((m) => m.memberType === "student"),
-    },
-  ];
+  const groups = TEAM_TIERS.map((tier) => ({
+    title: tier.title,
+    items: members.filter(
+      (member) => positionRank(member.position) === tier.rank
+    ),
+  }));
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -353,7 +362,7 @@ export default function TeamManager() {
                         <p className="mt-1 text-xs text-slate-500">
                           {member.memberType === "faculty"
                             ? member.designation
-                            : `${member.registerNumber} · Semester ${member.semester}`}
+                            : `${member.registerNumber} · ${member.year}${ordinal(member.year)} Year`}
                         </p>
 
                         <p className="text-xs text-slate-500">
@@ -431,6 +440,10 @@ export default function TeamManager() {
                       setForm((previous) => ({
                         ...previous,
                         memberType: value,
+                        position:
+                          value === "student"
+                            ? "Magazine Student Coordinator"
+                            : "",
                       }))
                     }
                     className={`rounded-xl border px-4 py-2.5 text-sm font-semibold transition ${
@@ -484,27 +497,40 @@ export default function TeamManager() {
 
               <div>
                 <label className={labelClass}>
-                  Role in the Magazine
+                  Role in the Magazine *
                 </label>
-                <input
+                <select
                   name="position"
                   value={form.position}
                   onChange={handleChange}
-                  placeholder="Example: Chief Editor, Student Coordinator"
-                  className={inputClass}
-                />
+                  disabled={form.memberType === "student"}
+                  className={`${inputClass} disabled:bg-slate-50 disabled:text-slate-600`}
+                >
+                  <option value="">Select role</option>
+                  {positionsFor(form.memberType).map((item) => (
+                    <option key={item.value} value={item.value}>
+                      {item.value}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               {form.memberType === "faculty" ? (
                 <div>
                   <label className={labelClass}>Designation *</label>
-                  <input
+                  <select
                     name="designation"
                     value={form.designation}
                     onChange={handleChange}
-                    placeholder="Example: Senior Lecturer"
                     className={inputClass}
-                  />
+                  >
+                    <option value="">Select designation</option>
+                    {DESIGNATIONS.map((designation) => (
+                      <option key={designation} value={designation}>
+                        {designation}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
@@ -521,17 +547,18 @@ export default function TeamManager() {
                   </div>
 
                   <div>
-                    <label className={labelClass}>Semester *</label>
+                    <label className={labelClass}>Year *</label>
                     <select
-                      name="semester"
-                      value={form.semester}
+                      name="year"
+                      value={form.year}
                       onChange={handleChange}
                       className={inputClass}
                     >
                       <option value="">Select</option>
-                      {[1, 2, 3, 4, 5, 6].map((semester) => (
-                        <option key={semester} value={semester}>
-                          {semester}
+                      {STUDENT_YEARS.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                          {ordinal(year)} Year
                         </option>
                       ))}
                     </select>

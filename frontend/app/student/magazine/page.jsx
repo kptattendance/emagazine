@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 
+import { statusLabel } from "../../lib/approvalStatus";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
@@ -388,11 +390,11 @@ export default function StudentMagazinePage() {
                         </div>
 
                         <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${getStatusStyle(
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${getStatusStyle(
                             content.status
                           )}`}
                         >
-                          {content.status}
+                          {statusLabel(content)}
                         </span>
 
                       </div>

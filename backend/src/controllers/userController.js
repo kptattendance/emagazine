@@ -9,6 +9,8 @@ const ADMIN_CREATED_ROLES = [
   "principal",
   "staff",
   "mag_coordinator",
+  "dept_coordinator",
+  "club_incharge",
 ];
 
 const ALL_ROLES = [
@@ -17,6 +19,8 @@ const ALL_ROLES = [
   "principal",
   "staff",
   "mag_coordinator",
+  "dept_coordinator",
+  "club_incharge",
   "student",
 ];
 

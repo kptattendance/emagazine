@@ -11,6 +11,13 @@ import {
   uploadImage,
 } from "../config/storage.js";
 
+import {
+  DESIGNATIONS,
+  STUDENT_YEARS,
+  TEAM_POSITIONS,
+  positionRank,
+} from "../config/teamPositions.js";
+
 const TEAM_FOLDER = "kpt-emagazine/team";
 
 /*
@@ -65,6 +72,14 @@ const readMember = (body) => {
     return { error: "Name is required." };
   }
 
+  const position = TEAM_POSITIONS.find(
+    (item) => item.value === body.position
+  );
+
+  if (!position || position.memberType !== memberType) {
+    return { error: "Please choose a valid role in the magazine." };
+  }
+
   const department = normalizeDepartment(body.department);
 
   if (!DEPARTMENTS.includes(department)) {
@@ -75,32 +90,32 @@ const readMember = (body) => {
     memberType,
     name,
     department,
-    position: String(body.position || "").trim(),
+    position: position.value,
     order: Number(body.order) || 0,
     designation: "",
     registerNumber: "",
-    semester: null,
+    year: null,
   };
 
   if (memberType === "faculty") {
     member.designation = String(body.designation || "").trim();
 
-    if (!member.designation) {
-      return { error: "Designation is required." };
+    if (!DESIGNATIONS.includes(member.designation)) {
+      return { error: "Please choose a designation." };
     }
   } else {
     member.registerNumber = String(body.registerNumber || "")
       .trim()
       .toUpperCase();
 
-    member.semester = Number(body.semester) || null;
+    member.year = Number(body.year) || null;
 
     if (!member.registerNumber) {
       return { error: "Register number is required." };
     }
 
-    if (!member.semester) {
-      return { error: "Semester is required." };
+    if (!STUDENT_YEARS.includes(member.year)) {
+      return { error: "Please choose the year." };
     }
   }
 
@@ -113,15 +128,24 @@ const readMember = (body) => {
 LIST (PUBLIC)
 =====================================================
 
-Faculty first, then students, each in display order.
+Principal and Academic Dean first, then the institute
+coordinator, department coordinators, and students.
+Within a role: display order, then name.
 =====================================================
 */
 
+const positionIndex = (position) =>
+  TEAM_POSITIONS.findIndex((item) => item.value === position);
+
 export const getTeamMembers = async (req, res) => {
   try {
-    const members = await TeamMember.find()
-      .sort({ memberType: 1, order: 1, name: 1 })
-      .lean();
+    const members = (await TeamMember.find().lean()).sort(
+      (a, b) =>
+        positionRank(a.position) - positionRank(b.position) ||
+        positionIndex(a.position) - positionIndex(b.position) ||
+        (a.order || 0) - (b.order || 0) ||
+        a.name.localeCompare(b.name)
+    );
 
     return res.status(200).json({
       success: true,

@@ -23,6 +23,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 
+import { ROLE_LABELS } from "../lib/approvalStatus";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 /*
@@ -111,6 +113,12 @@ const PANELS = {
         href: "/staff/new",
         icon: PenLine,
       },
+      {
+        label: "Student Requests",
+        href: "/staff/requests",
+        icon: Inbox,
+        roles: ["dept_coordinator"],
+      },
     ],
   },
 
@@ -142,27 +150,23 @@ export default function PanelSidebar({ panel }) {
 
   const homeHref = allMenuItems[0].href;
 
-  const [department, setDepartment] = useState("");
-
-  const needsDepartment = allMenuItems.some(
-    (item) => item.instituteOnly
-  );
+  // Some menu items depend on the account (role or department)
+  const [account, setAccount] = useState(null);
 
   useEffect(() => {
-    if (!needsDepartment) return;
-
     axios
       .get(`${API_URL}/api/users/me`)
-      .then((response) =>
-        setDepartment(
-          String(response.data?.data?.department || "").toUpperCase()
-        )
-      )
-      .catch(() => setDepartment(""));
-  }, [needsDepartment]);
+      .then((response) => setAccount(response.data?.data || null))
+      .catch(() => setAccount(null));
+  }, []);
+
+  const department = String(account?.department || "").toUpperCase();
+  const accountRole = String(account?.role || "").toLowerCase();
 
   const menuItems = allMenuItems.filter(
-    (item) => !item.instituteOnly || department === "IN"
+    (item) =>
+      (!item.instituteOnly || department === "IN") &&
+      (!item.roles || item.roles.includes(accountRole))
   );
 
   const pathname = usePathname();
@@ -354,7 +358,7 @@ export default function PanelSidebar({ panel }) {
               </p>
 
               <p className="truncate text-xs text-slate-500">
-                {role}
+                {ROLE_LABELS[accountRole] || role}
               </p>
             </div>
           </div>
