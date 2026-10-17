@@ -1,7 +1,9 @@
 import MagazineContent from "../models/MagazineContent.js";
 import Activity from "../models/Activity.js";
-import cloudinary from "../config/cloudinary.js";
-import { WATERMARK } from "../config/watermark.js";
+import {
+  deleteImage,
+  uploadImage,
+} from "../config/storage.js";
 
 import {
   DEPARTMENTS,
@@ -9,88 +11,6 @@ import {
   departmentAliases,
   normalizeDepartment,
 } from "../config/departments.js";
-
-/*
-=====================================================
-CLOUDINARY UPLOAD
-=====================================================
-*/
-
-const uploadToCloudinary = (
-  file,
-  folder,
-  transformation
-) => {
-  return new Promise((resolve, reject) => {
-    const stream = cloudinary.uploader.upload_stream(
-      {
-        folder,
-        resource_type: "image",
-        ...(transformation && { transformation }),
-      },
-      (error, result) => {
-        if (error) {
-          reject(error);
-        } else {
-          resolve(result);
-        }
-      }
-    );
-
-    stream.end(file.buffer);
-  });
-};
-
-
-/*
-=====================================================
-GET CLOUDINARY PUBLIC ID
-=====================================================
-*/
-
-const getCloudinaryPublicId = (url) => {
-  if (!url) return null;
-
-  try {
-    const match = url.match(
-      /\/upload\/(?:v\d+\/)?(.+)\.[^/.]+$/
-    );
-
-    if (!match) return null;
-
-    return match[1];
-  } catch (error) {
-    return null;
-  }
-};
-
-
-/*
-=====================================================
-DELETE CLOUDINARY IMAGE
-=====================================================
-*/
-
-const deleteCloudinaryImage = async (url) => {
-  const publicId = getCloudinaryPublicId(url);
-
-  if (!publicId) return;
-
-  try {
-    await cloudinary.uploader.destroy(
-      publicId,
-      {
-        resource_type: "image",
-      }
-    );
-  } catch (error) {
-    console.error(
-      "CLOUDINARY DELETE ERROR:",
-      error
-    );
-  }
-};
-
 
 /*
 =====================================================
@@ -478,14 +398,14 @@ export const createMagazineContent = async (
 
     if (req.files?.eventPhoto?.[0]) {
       const eventPhotoUpload =
-        await uploadToCloudinary(
+        await uploadImage(
           req.files.eventPhoto[0],
           "kpt-emagazine/magazine/events",
-          WATERMARK
+          { watermark: true }
         );
 
       eventPhotoUrl =
-        eventPhotoUpload.secure_url;
+        eventPhotoUpload;
     }
 
     let studentPhotoUrl = "";
@@ -495,13 +415,13 @@ export const createMagazineContent = async (
       req.files?.studentPhoto?.[0]
     ) {
       const studentPhotoUpload =
-        await uploadToCloudinary(
+        await uploadImage(
           req.files.studentPhoto[0],
           "kpt-emagazine/magazine/students"
         );
 
       studentPhotoUrl =
-        studentPhotoUpload.secure_url;
+        studentPhotoUpload;
     }
 
     let facultyPhotoUrl = "";
@@ -511,13 +431,13 @@ export const createMagazineContent = async (
       req.files?.facultyPhoto?.[0]
     ) {
       const facultyPhotoUpload =
-        await uploadToCloudinary(
+        await uploadImage(
           req.files.facultyPhoto[0],
           "kpt-emagazine/magazine/faculty"
         );
 
       facultyPhotoUrl =
-        facultyPhotoUpload.secure_url;
+        facultyPhotoUpload;
     }
 
 
@@ -1282,13 +1202,13 @@ export const updateMagazineContent =
           content.student?.photo;
 
         const uploaded =
-          await uploadToCloudinary(
+          await uploadImage(
             req.files.studentPhoto[0],
             "kpt-emagazine/magazine/students"
           );
 
         content.student.photo =
-          uploaded.secure_url;
+          uploaded;
 
         /*
         Delete old magazine student photo
@@ -1296,7 +1216,7 @@ export const updateMagazineContent =
         */
 
         if (oldPhoto) {
-          await deleteCloudinaryImage(
+          await deleteImage(
             oldPhoto
           );
         }
@@ -1328,16 +1248,16 @@ export const updateMagazineContent =
             content.faculty?.photo;
 
           const uploaded =
-            await uploadToCloudinary(
+            await uploadImage(
               req.files.facultyPhoto[0],
               "kpt-emagazine/magazine/faculty"
             );
 
           content.faculty.photo =
-            uploaded.secure_url;
+            uploaded;
 
           if (oldPhoto) {
-            await deleteCloudinaryImage(
+            await deleteImage(
               oldPhoto
             );
           }
@@ -1358,17 +1278,17 @@ export const updateMagazineContent =
           content.eventPhoto;
 
         const uploaded =
-          await uploadToCloudinary(
+          await uploadImage(
             req.files.eventPhoto[0],
             "kpt-emagazine/magazine/events",
-            WATERMARK
+            { watermark: true }
           );
 
         content.eventPhoto =
-          uploaded.secure_url;
+          uploaded;
 
         if (oldEventPhoto) {
-          await deleteCloudinaryImage(
+          await deleteImage(
             oldEventPhoto
           );
         }
@@ -1691,15 +1611,15 @@ export const deleteMagazineContent = async (
     // DELETE CLOUDINARY PHOTOS
     // =================================================
 
-    await deleteCloudinaryImage(
+    await deleteImage(
       content.eventPhoto
     );
 
-    await deleteCloudinaryImage(
+    await deleteImage(
       content.student?.photo
     );
 
-    await deleteCloudinaryImage(
+    await deleteImage(
       content.faculty?.photo
     );
 
