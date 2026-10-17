@@ -81,19 +81,30 @@ const canReview = (user, content) => {
 };
 
 /*
-First step for student content: the department
-coordinator approves and forwards it to the HOD.
+First step for every student submission: the department
+coordinator approves it and forwards it to the HOD
+(department content) or the institute coordinator
+(institute content).
+
+For institute content the coordinator is the one of the
+student's own department.
 */
+const coordinatorDepartmentOf = (content) =>
+  isInstituteContent(content)
+    ? content.student?.department
+    : content.department;
+
 const canCoordinatorReview = (user, content) =>
   getRole(user) === DEPT_COORDINATOR &&
   content.status === "pending" &&
   content.approvalStage === "department_coordinator" &&
-  !isInstituteContent(content) &&
-  sameDepartment(user, content);
+  sameDepartment(user, {
+    department: coordinatorDepartmentOf(content),
+  });
 
 // Where new or resubmitted content starts
-const initialStage = (submitterRole, content) =>
-  submitterRole === "student" && !isInstituteContent(content)
+const initialStage = (submitterRole) =>
+  submitterRole === "student"
     ? "department_coordinator"
     : "final";
 
@@ -117,12 +128,16 @@ const isOwner = (user, content) => {
 const isStudentContent = (content) =>
   getRole(content.submittedBy) === "student";
 
-const getApproverLabel = (content) =>
+// Who acts on the content next (or who gives final approval)
+const finalApproverLabel = (content) =>
   isInstituteContent(content)
     ? "Magazine Institute Coordinator"
-    : content.approvalStage === "department_coordinator"
-      ? "Department Coordinator"
-      : "HOD";
+    : "HOD";
+
+const getApproverLabel = (content) =>
+  content.approvalStage === "department_coordinator"
+    ? "Department Coordinator"
+    : finalApproverLabel(content);
 
 const pendingFilterFor = (user) => {
   const role = getRole(user);
@@ -149,12 +164,22 @@ const pendingFilterFor = (user) => {
   }
 
   if (role === DEPT_COORDINATOR && user.department) {
+    const departments = departmentAliases(user.department);
+
     return {
-      department: {
-        $in: departmentAliases(user.department),
-      },
-      level: { $ne: "institute" },
       approvalStage: "department_coordinator",
+      $or: [
+        // Department content of this department
+        {
+          level: { $ne: "institute" },
+          department: { $in: departments },
+        },
+        // Institute content from students of this department
+        {
+          level: "institute",
+          "student.department": { $in: departments },
+        },
+      ],
     };
   }
 
@@ -506,7 +531,7 @@ export const createMagazineContent = async (
     const approvalStage =
       status === "published"
         ? "final"
-        : initialStage(role, { level, department });
+        : initialStage(role);
 
 
     /*
@@ -1388,8 +1413,7 @@ export const updateMagazineContent =
         isOwner(user, content)
       ) {
         content.approvalStage = initialStage(
-          getRole(content.submittedBy),
-          content
+          getRole(content.submittedBy)
         );
 
         content.coordinatorApproval = {
@@ -1494,7 +1518,9 @@ export const approveMagazineContent = async (
       return res.status(200).json({
         success: true,
         message:
-          "Approved and sent to the HOD for publishing.",
+          `Approved and sent to the ${finalApproverLabel(
+            content
+          )} for publishing.`,
         data: content,
       });
     }

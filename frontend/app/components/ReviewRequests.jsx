@@ -7,7 +7,10 @@ import Swal from "sweetalert2";
 
 import { useAuth } from "@clerk/nextjs";
 
-import { getDepartmentLabel } from "../lib/departments";
+import {
+  getDepartmentLabel,
+  isInstituteContent,
+} from "../lib/departments";
 import { statusLabel } from "../lib/approvalStatus";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -28,8 +31,16 @@ export default function ReviewRequests({
   emptyText,
   studentEditBasePath,
   facultyEditBasePath,
-  approveLabel = "Approve & Publish",
+  // Department coordinator: approving forwards instead of publishing
+  forwarding = false,
 }) {
+  const approveLabelFor = (content) =>
+    !forwarding
+      ? "Approve & Publish"
+      : isInstituteContent(content)
+        ? "Approve & Send to Institute Coordinator"
+        : "Approve & Send to HOD";
+
   const router = useRouter();
 
   const { isLoaded, isSignedIn } = useAuth();
@@ -79,12 +90,13 @@ export default function ReviewRequests({
     const result = await Swal.fire({
       icon: "question",
       title: "Approve this content?",
-      text:
-        approveLabel === "Approve & Publish"
-          ? "Once approved, it will be published and the submitter will no longer be able to edit it."
+      text: !forwarding
+        ? "Once approved, it will be published and the submitter will no longer be able to edit it."
+        : isInstituteContent(content)
+          ? "It will be sent to the Magazine Institute Coordinator, who publishes it."
           : "It will be sent to the HOD, who publishes it.",
       showCancelButton: true,
-      confirmButtonText: approveLabel,
+      confirmButtonText: approveLabelFor(content),
       cancelButtonText: "Cancel",
       confirmButtonColor: "#16a34a",
     });
@@ -435,7 +447,7 @@ export default function ReviewRequests({
                     >
                       {processingId === content._id
                         ? "Processing..."
-                        : approveLabel}
+                        : approveLabelFor(content)}
                     </button>
 
                     <button

@@ -16,15 +16,14 @@ export function statusLabel(content) {
     return "Rejected";
   }
 
-  if (isInstituteContent(content)) {
-    return "Waiting for Institute Coordinator";
-  }
-
+  // Every student submission is checked by a department coordinator first
   if (content?.approvalStage === "department_coordinator") {
     return "Waiting for Department Coordinator";
   }
 
-  return "Waiting for HOD";
+  return isInstituteContent(content)
+    ? "Waiting for Institute Coordinator"
+    : "Waiting for HOD";
 }
 
 // Readable names for user roles

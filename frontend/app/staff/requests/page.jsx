@@ -6,9 +6,9 @@ export default function DepartmentCoordinatorRequestsPage() {
   return (
     <ReviewRequests
       scopeLabel="Your Department"
-      subtitle="Check student submissions. Approved ones go to the HOD for publishing."
+      subtitle="Check your department students' submissions. Approved ones go to the HOD, or to the Institute Coordinator for institute level content."
       emptyText="There are no student submissions waiting for you."
-      approveLabel="Approve & Send to HOD"
+      forwarding
       studentEditBasePath="/staff/edit"
       facultyEditBasePath="/staff/edit"
     />
