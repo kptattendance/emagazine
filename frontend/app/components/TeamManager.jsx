@@ -334,6 +334,8 @@ export default function TeamManager() {
                     >
                       {member.photo ? (
                         <img
+  loading="lazy"
+  decoding="async"
                           src={member.photo}
                           alt={member.name}
                           className="h-20 w-20 shrink-0 rounded-2xl object-cover"
@@ -460,6 +462,8 @@ export default function TeamManager() {
               <div className="flex items-center gap-4">
                 {photoPreview ? (
                   <img
+  loading="lazy"
+  decoding="async"
                     src={photoPreview}
                     alt="Preview"
                     className="h-20 w-20 rounded-2xl object-cover"

@@ -306,6 +306,8 @@ export default function ReviewRequests({
 
                     {photo ? (
                       <img
+  loading="lazy"
+  decoding="async"
                         src={photo}
                         alt={isStudent ? "Student" : "Faculty"}
                         className="mb-4 h-32 w-32 rounded-2xl object-cover"
@@ -403,6 +405,8 @@ export default function ReviewRequests({
                         rel="noreferrer"
                       >
                         <img
+  loading="lazy"
+  decoding="async"
                           src={content.eventPhoto}
                           alt={content.title || "Photo"}
                           className="mb-4 h-56 w-full rounded-2xl object-cover"

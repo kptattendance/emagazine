@@ -5,6 +5,8 @@ import { useAuth, useClerk, useUser } from "@clerk/nextjs";
 import axios from "axios";
 import { usePathname, useRouter } from "next/navigation";
 
+import { getCurrentUser } from "../lib/currentUser";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const ROLE_HOME = {
@@ -53,14 +55,7 @@ export default function RoleProtected({
           return;
         }
 
-        const response = await axios.get(
-          `${API_URL}/api/users/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await getCurrentUser(user.id);
 
         const userData =
           response?.data?.data ||

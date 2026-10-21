@@ -411,7 +411,9 @@ export const getAllUsers = async (
     if (search.trim()) {
       const regex =
         new RegExp(
-          search.trim(),
+          String(search)
+            .trim()
+            .replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
           "i"
         );
 

@@ -355,6 +355,8 @@ export default function StudentMagazinePage() {
 
                       {content.eventPhoto ? (
                         <img
+  loading="lazy"
+  decoding="async"
                           src={
                             content.eventPhoto
                           }

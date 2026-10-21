@@ -259,6 +259,11 @@ const magazineContentSchema = new mongoose.Schema(
   }
 );
 
+// Public magazine, review lists, and "my submissions"
+magazineContentSchema.index({ status: 1, eventDate: -1 });
+magazineContentSchema.index({ department: 1, status: 1 });
+magazineContentSchema.index({ "submittedBy.email": 1 });
+
 const MagazineContent = mongoose.model(
   "MagazineContent",
   magazineContentSchema

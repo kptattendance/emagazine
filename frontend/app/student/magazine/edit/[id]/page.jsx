@@ -777,6 +777,8 @@ export default function EditMagazineContentPage() {
                 {studentPreview ||
                 oldStudentPhoto ? (
                   <img
+  loading="lazy"
+  decoding="async"
                     src={
                       studentPreview ||
                       oldStudentPhoto
@@ -807,6 +809,8 @@ export default function EditMagazineContentPage() {
                 {eventPreview ||
                 oldEventPhoto ? (
                   <img
+  loading="lazy"
+  decoding="async"
                     src={
                       eventPreview ||
                       oldEventPhoto

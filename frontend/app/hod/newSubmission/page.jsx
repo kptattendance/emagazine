@@ -568,6 +568,8 @@ export default function HODMagazineCreatePage() {
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                   <div className="relative">
                     <img
+  loading="lazy"
+  decoding="async"
                       src={eventPhotoPreview}
                       alt="Event preview"
                       className="max-h-[450px] w-full object-contain bg-slate-100"

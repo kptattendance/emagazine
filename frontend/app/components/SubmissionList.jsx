@@ -175,6 +175,8 @@ export default function SubmissionList({
                 <div className="flex flex-col gap-4 p-5 sm:flex-row">
                   {content.eventPhoto && (
                     <img
+  loading="lazy"
+  decoding="async"
                       src={content.eventPhoto}
                       alt={content.title}
                       className="h-40 w-full rounded-xl object-cover sm:h-28 sm:w-40 sm:shrink-0"

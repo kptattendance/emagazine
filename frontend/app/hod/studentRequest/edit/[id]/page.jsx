@@ -1216,6 +1216,8 @@ export default function HODStudentRequestEditPage() {
                   <div className="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
                     <img
+  loading="lazy"
+  decoding="async"
                       src={
                         studentPhotoPreview
                       }
@@ -1257,6 +1259,8 @@ export default function HODStudentRequestEditPage() {
                   <div className="relative mb-4 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
 
                     <img
+  loading="lazy"
+  decoding="async"
                       src={
                         eventPhotoPreview
                       }

@@ -705,6 +705,8 @@ function ArticleCard({
         >
           {article.eventPhoto ? (
             <img
+  loading="lazy"
+  decoding="async"
               src={article.eventPhoto}
               alt={article.title}
               className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -757,6 +759,8 @@ function ArticleCard({
 
               {article.studentPhoto ? (
                 <img
+  loading="lazy"
+  decoding="async"
                   src={article.studentPhoto}
                   alt={article.studentName}
                   onClick={(event) => {
@@ -822,6 +826,8 @@ function ArticleCard({
           </button>
 
           <img
+  loading="lazy"
+  decoding="async"
             src={previewImage}
             alt="Enlarged preview"
             onClick={(event) => event.stopPropagation()}
@@ -888,6 +894,8 @@ function ArticleModal({
                 onClick={() => setPreviewImage(article.eventPhoto)}
               >
                 <img
+  loading="lazy"
+  decoding="async"
                   src={article.eventPhoto}
                   alt={article.title}
                   className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
@@ -941,6 +949,8 @@ function ArticleModal({
 
                     {article.studentPhoto ? (
                       <img
+  loading="lazy"
+  decoding="async"
                         src={article.studentPhoto}
                         alt={article.studentName}
                         onClick={() =>
@@ -1002,6 +1012,8 @@ function ArticleModal({
           </button>
 
           <img
+  loading="lazy"
+  decoding="async"
             src={previewImage}
             alt="Enlarged preview"
             onClick={(event) => event.stopPropagation()}

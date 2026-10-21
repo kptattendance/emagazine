@@ -20,12 +20,10 @@ import {
 } from "lucide-react";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { SignOutButton, UserButton, useUser } from "@clerk/nextjs";
 
 import { ROLE_LABELS } from "../lib/approvalStatus";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { getCurrentUser } from "../lib/currentUser";
 
 /*
 ============================================================
@@ -150,15 +148,18 @@ export default function PanelSidebar({ panel }) {
 
   const homeHref = allMenuItems[0].href;
 
+  const { user } = useUser();
+
   // Some menu items depend on the account (role or department)
   const [account, setAccount] = useState(null);
 
   useEffect(() => {
-    axios
-      .get(`${API_URL}/api/users/me`)
+    if (!user?.id) return;
+
+    getCurrentUser(user.id)
       .then((response) => setAccount(response.data?.data || null))
       .catch(() => setAccount(null));
-  }, []);
+  }, [user?.id]);
 
   const department = String(account?.department || "").toUpperCase();
   const accountRole = String(account?.role || "").toLowerCase();
@@ -170,7 +171,6 @@ export default function PanelSidebar({ panel }) {
   );
 
   const pathname = usePathname();
-  const { user } = useUser();
 
   const [mobileOpen, setMobileOpen] = useState(false);
 

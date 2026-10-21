@@ -1146,6 +1146,8 @@ useEffect(() => {
 
                   {studentPhotoPreview ? (
                     <img
+  loading="lazy"
+  decoding="async"
                       src={studentPhotoPreview}
                       alt="Student preview"
                       className="h-44 w-44 rounded-xl object-cover shadow-sm"
@@ -1211,6 +1213,8 @@ useEffect(() => {
 
                   {eventPhotoPreview ? (
                     <img
+  loading="lazy"
+  decoding="async"
                       src={eventPhotoPreview}
                       alt="Event preview"
                       className="h-44 w-full rounded-xl object-cover shadow-sm"

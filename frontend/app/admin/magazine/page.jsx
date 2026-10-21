@@ -935,6 +935,8 @@ export default function AdminMagazinePage() {
                                     className="group/photo relative h-11 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100"
                                   >
                                     <img
+  loading="lazy"
+  decoding="async"
                                       src={
                                         content.eventPhoto
                                       }
@@ -1340,6 +1342,8 @@ export default function AdminMagazinePage() {
                         className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
                       >
                         <img
+  loading="lazy"
+  decoding="async"
                           src={
                             selectedContent.eventPhoto
                           }
@@ -1367,6 +1371,8 @@ export default function AdminMagazinePage() {
                         className="block w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
                       >
                         <img
+  loading="lazy"
+  decoding="async"
                           src={
                             selectedContent.student
                               .photo
@@ -1514,6 +1520,8 @@ export default function AdminMagazinePage() {
           </button>
 
           <img
+  loading="lazy"
+  decoding="async"
             src={previewImage}
             alt=""
             onClick={(e) =>

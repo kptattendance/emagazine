@@ -1057,6 +1057,8 @@ export default function HODDepartmentMagazinePage() {
                       <td className="px-3 py-3">
                         {item.eventPhoto ? (
                           <img
+  loading="lazy"
+  decoding="async"
                             src={
                               item.eventPhoto
                             }

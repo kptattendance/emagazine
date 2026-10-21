@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+import { getCurrentUser } from "../lib/currentUser";
 import axios from "axios";
 
 import {
@@ -77,14 +79,7 @@ export default function Navbar() {
           return;
         }
 
-        const response = await axios.get(
-          `${API_URL}/api/users/me`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await getCurrentUser(user.id);
 
         if (cancelled) return;
 

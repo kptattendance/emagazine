@@ -756,6 +756,8 @@ export default function SubmissionForm({
                 <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
                   <div className="relative">
                     <img
+  loading="lazy"
+  decoding="async"
                       src={eventPhotoPreview}
                       alt="Preview"
                       className="max-h-[450px] w-full object-contain bg-slate-100"
@@ -866,6 +868,8 @@ export default function SubmissionForm({
                 <div className="flex items-center gap-4">
                   {facultyPhotoPreview ? (
                     <img
+  loading="lazy"
+  decoding="async"
                       src={facultyPhotoPreview}
                       alt="Faculty"
                       className="h-20 w-20 rounded-2xl object-cover"
