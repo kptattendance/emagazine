@@ -17,6 +17,7 @@ const ROLE_HOME = {
   mag_coordinator: "/coordinator",
   dept_coordinator: "/staff",
   club_incharge: "/staff",
+  welfare_officer: "/staff",
   student: "/student/magazine",
 };
 

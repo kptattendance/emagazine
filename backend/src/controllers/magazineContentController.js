@@ -46,8 +46,19 @@ const isInstituteContent = (content) =>
 const DEPT_COORDINATOR = "dept_coordinator";
 const CLUB_INCHARGE = "club_incharge";
 
+/*
+Student Welfare Officer: publishes directly, anywhere,
+without approval. Does not review anyone else's content.
+*/
+const WELFARE_OFFICER = "welfare_officer";
+
 // Faculty roles: they give name and designation with a submission
-const FACULTY_ROLES = ["staff", DEPT_COORDINATOR, CLUB_INCHARGE];
+const FACULTY_ROLES = [
+  "staff",
+  DEPT_COORDINATOR,
+  CLUB_INCHARGE,
+  WELFARE_OFFICER,
+];
 
 const sameDepartment = (user, content) => {
   const userDepartment = normalizeDepartment(user.department);
@@ -564,12 +575,14 @@ export const createMagazineContent = async (
     =================================================
     */
 
-    const status = canReview(user, {
-      level,
-      department,
-    })
-      ? "published"
-      : "pending";
+    const status =
+      role === WELFARE_OFFICER ||
+      canReview(user, {
+        level,
+        department,
+      })
+        ? "published"
+        : "pending";
 
     const approvalStage =
       status === "published"
@@ -1801,8 +1814,10 @@ export const deleteMagazineContent = async (
         });
       }
 
+      // Direct publishers may remove what they published themselves
       if (
-        content.status === "published"
+        content.status === "published" &&
+        getRole(user) !== WELFARE_OFFICER
       ) {
         return res.status(403).json({
           success: false,

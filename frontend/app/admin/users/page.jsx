@@ -61,6 +61,10 @@ const ROLES = [
     label: "Club In-charge",
   },
   {
+    value: "welfare_officer",
+    label: "Student Welfare Officer",
+  },
+  {
     value: "student",
     label: "Student",
   },
@@ -161,6 +165,14 @@ const getRoleStyle = (role) => {
         className:
           "bg-cyan-50 text-cyan-700 border-cyan-200",
         icon: BookOpen,
+      };
+
+    case "welfare_officer":
+      return {
+        label: "Student Welfare Officer",
+        className:
+          "bg-indigo-50 text-indigo-700 border-indigo-200",
+        icon: Crown,
       };
 
     case "club_incharge":

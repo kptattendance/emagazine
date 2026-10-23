@@ -13,6 +13,7 @@ const ALLOWED_ROLES = [
   "staff",
   "dept_coordinator",
   "club_incharge",
+  "welfare_officer",
 ];
 
 export default function FacultyLayout({ children }) {

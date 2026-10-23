@@ -35,5 +35,6 @@ export const ROLE_LABELS = {
   mag_coordinator: "Magazine Institute Coordinator",
   dept_coordinator: "Department Coordinator",
   club_incharge: "Club In-charge",
+  welfare_officer: "Student Welfare Officer",
   student: "Student",
 };

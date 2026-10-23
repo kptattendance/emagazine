@@ -245,6 +245,7 @@ export default function SubmissionForm({
 
   const publishesDirectly =
     userRole === "admin" ||
+    userRole === "welfare_officer" ||
     (userRole === "mag_coordinator" && isInstitute) ||
     (userRole === "hod" &&
       Boolean(form.department) &&

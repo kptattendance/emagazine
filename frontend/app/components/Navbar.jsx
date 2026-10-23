@@ -112,6 +112,7 @@ export default function Navbar() {
           case "staff":
           case "dept_coordinator":
           case "club_incharge":
+          case "welfare_officer":
             setDashboardUrl("/staff");
             break;
 

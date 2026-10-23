@@ -199,6 +199,7 @@ export default function AuthCheckPage() {
 
           case "dept_coordinator":
           case "club_incharge":
+          case "welfare_officer":
             router.replace("/staff");
             return;
 

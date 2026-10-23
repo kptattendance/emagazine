@@ -103,6 +103,9 @@ const getSubmitterRole = (role) => {
     case "club_incharge":
       return "Club In-charge";
 
+    case "welfare_officer":
+      return "Student Welfare Officer";
+
     case "principal":
       return "Principal";
 
