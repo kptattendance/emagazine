@@ -129,7 +129,8 @@ export default function HODMagazineCreatePage() {
       setActivities(
         Array.isArray(activityData)
           ? activityData.filter(
-              (activity) => activity.type !== "creative"
+              (activity) =>
+                (activity.type || "activity") === "activity"
             )
           : []
       );

@@ -12,6 +12,7 @@ import {
   isInstituteContent,
 } from "../lib/departments";
 import { statusLabel } from "../lib/approvalStatus";
+import { achievementSummary } from "../lib/achievement";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -254,6 +255,9 @@ export default function ReviewRequests({
             const isCreative =
               content.contentType === "creative";
 
+            const isAchievement =
+              content.contentType === "achievement";
+
             const photo = isStudent
               ? content.student?.photo
               : content.faculty?.photo;
@@ -338,8 +342,19 @@ export default function ReviewRequests({
                         </span>{" "}
                         {isCreative
                           ? "Own work"
-                          : "College activity"}
+                          : isAchievement
+                            ? "Achievement"
+                            : "College activity"}
                       </p>
+
+                      {isAchievement && (
+                        <p>
+                          <span className="font-semibold">
+                            Achievement:
+                          </span>{" "}
+                          {achievementSummary(content.achievement) || "-"}
+                        </p>
+                      )}
 
                       <p>
                         <span className="font-semibold">

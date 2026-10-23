@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { useAuth, useUser } from "@clerk/nextjs";
 
+import AchievementFields from "../../../components/AchievementFields";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -30,6 +32,8 @@ const { getToken } = useAuth();
     activity: "",
     eventDate: "",
     description: "",
+    achievementLevel: "",
+    achievementAward: "",
 
     name: "",
     registerNumber: "",
@@ -198,6 +202,8 @@ useEffect(() => {
   */
 
   const isCreative = postType === "creative";
+
+  const isAchievement = postType === "achievement";
 
   const typeActivities = activities.filter(
     (activity) =>
@@ -410,7 +416,17 @@ useEffect(() => {
     }
 
     if (!isCreative && !form.eventDate) {
-      return "Please select the event date.";
+      return isAchievement
+        ? "Please select the date of the achievement."
+        : "Please select the event date.";
+    }
+
+    if (isAchievement && !form.achievementLevel) {
+      return "Please select the level of the achievement.";
+    }
+
+    if (isAchievement && !form.achievementAward.trim()) {
+      return "Please enter the prize or position.";
     }
 
     if (!form.description.trim()) {
@@ -533,6 +549,18 @@ useEffect(() => {
         form.department.trim()
       );
 
+      if (isAchievement) {
+        formData.append(
+          "achievementLevel",
+          form.achievementLevel
+        );
+
+        formData.append(
+          "achievementAward",
+          form.achievementAward.trim()
+        );
+      }
+
       if (isCreative) {
         formData.append(
           "originalWork",
@@ -633,6 +661,8 @@ useEffect(() => {
         activity: "",
         eventDate: "",
         description: "",
+        achievementLevel: "",
+        achievementAward: "",
 
         name: userData.name || "",
         registerNumber: "",
@@ -764,17 +794,22 @@ useEffect(() => {
 
             {/* POST TYPE */}
 
-            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
               {[
                 {
                   value: "activity",
                   title: "College Activity",
-                  text: "An event, visit, workshop or achievement.",
+                  text: "An event, visit, workshop or programme.",
                 },
                 {
                   value: "creative",
                   title: "My Own Work",
                   text: "An article, poem, story, drawing or photograph.",
+                },
+                {
+                  value: "achievement",
+                  title: "My Achievement",
+                  text: "A prize, rank, medal or selection you won.",
                 },
               ].map((option) => (
                 <button
@@ -832,7 +867,7 @@ useEffect(() => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  {isCreative ? "Category" : "Activity"}
+                  {isCreative || isAchievement ? "Category" : "Activity"}
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -848,7 +883,7 @@ useEffect(() => {
                   <option value="">
                     {loadingActivities
                       ? "Loading..."
-                      : isCreative
+                      : isCreative || isAchievement
                         ? "Select category"
                         : "Select activity"}
                   </option>
@@ -872,7 +907,7 @@ useEffect(() => {
               {!isCreative && (
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  Event Date
+                  {isAchievement ? "Date of Achievement" : "Event Date"}
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -889,11 +924,28 @@ useEffect(() => {
               )}
 
 
+              {/* ACHIEVEMENT */}
+
+              {isAchievement && (
+                <AchievementFields
+                  level={form.achievementLevel}
+                  award={form.achievementAward}
+                  onChange={handleChange}
+                  labelClass="mb-2 block text-sm font-medium text-slate-700"
+                  inputClass="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
+                />
+              )}
+
+
               {/* DESCRIPTION */}
 
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  {isCreative ? "Write-up" : "Description"}
+                  {isCreative
+                    ? "Write-up"
+                    : isAchievement
+                      ? "About the Achievement"
+                      : "Description"}
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -1124,7 +1176,7 @@ useEffect(() => {
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Upload the student photograph and the {isCreative ? "image of your work" : "event photograph"}.
+                Upload the student photograph and the {isCreative ? "image of your work" : isAchievement ? "photo or certificate of the achievement" : "event photograph"}.
                 Maximum 10 MB per image.
               </p>
             </div>
@@ -1197,7 +1249,11 @@ useEffect(() => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  {isCreative ? "Image of Your Work" : "Event Photo"}
+                  {isCreative
+                    ? "Image of Your Work"
+                    : isAchievement
+                      ? "Photo or Certificate"
+                      : "Event Photo"}
                   {imageRequired ? (
                     <span className="text-red-500">
                       {" "}*

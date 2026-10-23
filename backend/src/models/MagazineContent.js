@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+import { ACHIEVEMENT_LEVELS } from "../config/achievement.js";
+
 const magazineContentSchema = new mongoose.Schema(
   {
     /*
@@ -25,12 +27,29 @@ const magazineContentSchema = new mongoose.Schema(
 
     activity → college event / activity report
     creative → own work (article, poem, drawing...)
+    achievement → a prize, rank or selection someone won
     */
 
     contentType: {
       type: String,
-      enum: ["activity", "creative"],
+      enum: ["activity", "creative", "achievement"],
       default: "activity",
+    },
+
+    // Filled only for achievements
+    achievement: {
+      level: {
+        type: String,
+        enum: ["", ...ACHIEVEMENT_LEVELS],
+        default: "",
+      },
+
+      // e.g. First Prize, Selected, Gold Medal
+      award: {
+        type: String,
+        default: "",
+        trim: true,
+      },
     },
 
     level: {

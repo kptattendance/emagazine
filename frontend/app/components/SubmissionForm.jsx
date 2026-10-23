@@ -24,6 +24,8 @@ import {
   normalizeDepartment,
 } from "../lib/departments";
 
+import AchievementFields from "./AchievementFields";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -74,6 +76,8 @@ export default function SubmissionForm({
     facultyName: "",
     designation: "",
     originalWork: false,
+    achievementLevel: "",
+    achievementAward: "",
   });
 
   const [eventPhoto, setEventPhoto] = useState(null);
@@ -156,6 +160,8 @@ export default function SubmissionForm({
           facultyName: content.faculty?.name || "",
           designation: content.faculty?.designation || "",
           originalWork: true,
+          achievementLevel: content.achievement?.level || "",
+          achievementAward: content.achievement?.award || "",
         });
 
         setSavedEventPhoto(content.eventPhoto || "");
@@ -221,6 +227,8 @@ export default function SubmissionForm({
   );
 
   const isCreative = postType === "creative";
+
+  const isAchievement = postType === "achievement";
 
   const imageRequired =
     !isCreative || selectedActivity?.imageRequired !== false;
@@ -326,7 +334,17 @@ export default function SubmissionForm({
     }
 
     if (!isCreative && !form.eventDate) {
-      return "Please select the event date.";
+      return isAchievement
+        ? "Please select the date of the achievement."
+        : "Please select the event date.";
+    }
+
+    if (isAchievement && !form.achievementLevel) {
+      return "Please select the level of the achievement.";
+    }
+
+    if (isAchievement && !form.achievementAward.trim()) {
+      return "Please enter the prize or position.";
     }
 
     if (!form.description.trim()) {
@@ -400,6 +418,14 @@ export default function SubmissionForm({
 
       if (isCreative) {
         formData.append("originalWork", "true");
+      }
+
+      if (isAchievement) {
+        formData.append("achievementLevel", form.achievementLevel);
+        formData.append(
+          "achievementAward",
+          form.achievementAward.trim()
+        );
       }
 
       if (showFaculty) {
@@ -523,17 +549,22 @@ export default function SubmissionForm({
                 What are you submitting?
               </label>
 
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {[
                   {
                     value: "activity",
                     title: "College Activity",
-                    text: "An event, visit, workshop or achievement.",
+                    text: "An event, visit, workshop or programme.",
                   },
                   {
                     value: "creative",
                     title: "My Own Work",
                     text: "An article, poem, story, drawing or photograph.",
+                  },
+                  {
+                    value: "achievement",
+                    title: "My Achievement",
+                    text: "A prize, rank, medal or selection you won.",
                   },
                 ].map((option) => (
                   <button
@@ -567,7 +598,7 @@ export default function SubmissionForm({
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label className={labelClass}>
-                  {isCreative ? "Category" : "Activity"}
+                  {isCreative || isAchievement ? "Category" : "Activity"}
                   <span className="ml-1 text-red-500">*</span>
                 </label>
 
@@ -578,7 +609,7 @@ export default function SubmissionForm({
                   className={inputClass}
                 >
                   <option value="">
-                    {isCreative
+                    {isCreative || isAchievement
                       ? "Select Category"
                       : "Select Activity"}
                   </option>
@@ -604,7 +635,7 @@ export default function SubmissionForm({
               {!isCreative && (
                 <div>
                   <label className={labelClass}>
-                    Event Date
+                    {isAchievement ? "Date of Achievement" : "Event Date"}
                     <span className="ml-1 text-red-500">*</span>
                   </label>
 
@@ -622,6 +653,18 @@ export default function SubmissionForm({
                 </div>
               )}
             </div>
+
+            {isAchievement && (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <AchievementFields
+                  level={form.achievementLevel}
+                  award={form.achievementAward}
+                  onChange={handleChange}
+                  labelClass={labelClass}
+                  inputClass={inputClass}
+                />
+              </div>
+            )}
 
             {/* =================================================
                 TITLE
@@ -686,7 +729,11 @@ export default function SubmissionForm({
 
             <div>
               <label className={labelClass}>
-                {isCreative ? "Write-up" : "Description"}
+                {isCreative
+                  ? "Write-up"
+                  : isAchievement
+                    ? "About the Achievement"
+                    : "Description"}
                 <span className="ml-1 text-red-500">*</span>
               </label>
 
@@ -714,7 +761,11 @@ export default function SubmissionForm({
 
             <div>
               <label className={labelClass}>
-                {isCreative ? "Image" : "Event Photo"}
+                {isCreative
+                  ? "Image"
+                  : isAchievement
+                    ? "Photo or Certificate"
+                    : "Event Photo"}
 
                 {imageRequired ? (
                   <span className="ml-1 text-red-500">*</span>

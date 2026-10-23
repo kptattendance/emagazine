@@ -809,6 +809,12 @@ export default function ActivityPage() {
                             {activity.name}
                           </p>
 
+                          {activity.type === "achievement" && (
+                            <span className="mt-1 inline-flex rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
+                              Achievement category
+                            </span>
+                          )}
+
                           {activity.type === "creative" && (
                             <span className="mt-1 inline-flex rounded-full bg-sky-50 px-2.5 py-0.5 text-xs font-semibold text-sky-700">
                               Own work category
@@ -996,6 +1002,10 @@ export default function ActivityPage() {
 
                   <option value="creative">
                     Own work (article, poem, drawing...)
+                  </option>
+
+                  <option value="achievement">
+                    Achievement (prize, rank, medal, selection...)
                   </option>
                 </select>
 

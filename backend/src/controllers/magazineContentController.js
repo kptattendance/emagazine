@@ -5,6 +5,8 @@ import {
   uploadImage,
 } from "../config/storage.js";
 
+import { ACHIEVEMENT_LEVELS } from "../config/achievement.js";
+
 import {
   DEPARTMENTS,
   INSTITUTE_DEPARTMENT,
@@ -101,6 +103,24 @@ const canCoordinatorReview = (user, content) =>
   sameDepartment(user, {
     department: coordinatorDepartmentOf(content),
   });
+
+/*
+Level and prize of an achievement, or an error message.
+*/
+const readAchievement = (level, award) => {
+  const cleanLevel = String(level || "").trim();
+  const cleanAward = String(award || "").trim();
+
+  if (!ACHIEVEMENT_LEVELS.includes(cleanLevel)) {
+    return { error: "Please choose the level of the achievement." };
+  }
+
+  if (!cleanAward) {
+    return { error: "Please enter the prize or position." };
+  }
+
+  return { achievement: { level: cleanLevel, award: cleanAward } };
+};
 
 // Where new or resubmitted content starts
 const initialStage = (submitterRole) =>
@@ -213,6 +233,8 @@ export const createMagazineContent = async (
       eventDate,
       description,
       originalWork,
+      achievementLevel,
+      achievementAward,
 
       studentName,
       registerNumber,
@@ -328,8 +350,29 @@ export const createMagazineContent = async (
     if (!isCreative && !eventDate) {
       return res.status(400).json({
         success: false,
-        message: "Event date is required.",
+        message:
+          contentType === "achievement"
+            ? "Date of the achievement is required."
+            : "Event date is required.",
       });
+    }
+
+    let achievementDetails = { level: "", award: "" };
+
+    if (contentType === "achievement") {
+      const { achievement, error } = readAchievement(
+        achievementLevel,
+        achievementAward
+      );
+
+      if (error) {
+        return res.status(400).json({
+          success: false,
+          message: error,
+        });
+      }
+
+      achievementDetails = achievement;
     }
 
     if (
@@ -617,6 +660,8 @@ export const createMagazineContent = async (
           activityDocument._id,
 
         contentType,
+
+        achievement: achievementDetails,
 
         level,
 
@@ -1023,6 +1068,9 @@ export const updateMagazineContent =
 
         facultyName,
         designation,
+
+        achievementLevel,
+        achievementAward,
       } = req.body;
 
 
@@ -1216,6 +1264,29 @@ export const updateMagazineContent =
 
         content.description =
           description.trim();
+      }
+
+      /*
+      Achievement details: required for achievements,
+      cleared for everything else.
+      */
+
+      if (content.contentType === "achievement") {
+        const { achievement, error } = readAchievement(
+          achievementLevel ?? content.achievement?.level,
+          achievementAward ?? content.achievement?.award
+        );
+
+        if (error) {
+          return res.status(400).json({
+            success: false,
+            message: error,
+          });
+        }
+
+        content.achievement = achievement;
+      } else {
+        content.achievement = { level: "", award: "" };
       }
 
 

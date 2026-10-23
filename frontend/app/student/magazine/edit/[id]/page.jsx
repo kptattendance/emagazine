@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from "sweetalert2";
+
+import AchievementFields from "../../../../components/AchievementFields";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
@@ -38,6 +40,9 @@ export default function EditMagazineContentPage() {
   const isCreative =
     contentType === "creative";
 
+  const isAchievement =
+    contentType === "achievement";
+
   const [form, setForm] =
     useState({
       title: "",
@@ -45,6 +50,8 @@ export default function EditMagazineContentPage() {
       eventDate: "",
       description: "",
       department: "",
+      achievementLevel: "",
+      achievementAward: "",
 
       name: "",
       registerNumber: "",
@@ -220,6 +227,12 @@ export default function EditMagazineContentPage() {
 
         description:
           content.description || "",
+
+        achievementLevel:
+          content.achievement?.level || "",
+
+        achievementAward:
+          content.achievement?.award || "",
 
         department:
           content.department || "",
@@ -416,6 +429,18 @@ export default function EditMagazineContentPage() {
         form.description.trim()
       );
 
+      if (isAchievement) {
+        formData.append(
+          "achievementLevel",
+          form.achievementLevel
+        );
+
+        formData.append(
+          "achievementAward",
+          form.achievementAward.trim()
+        );
+      }
+
       formData.append(
         "studentName",
         form.name.trim()
@@ -566,7 +591,7 @@ export default function EditMagazineContentPage() {
 
               <div>
                 <label className="mb-2 block text-sm font-semibold">
-                  {isCreative
+                  {isCreative || isAchievement
                     ? "Category"
                     : "Activity"}
                 </label>
@@ -611,7 +636,9 @@ export default function EditMagazineContentPage() {
               {!isCreative && (
               <div>
                 <label className="mb-2 block text-sm font-semibold">
-                  Event Date
+                  {isAchievement
+                    ? "Date of Achievement"
+                    : "Event Date"}
                 </label>
 
                 <input
@@ -628,6 +655,16 @@ export default function EditMagazineContentPage() {
               </div>
               )}
 
+              {isAchievement && (
+                <AchievementFields
+                  level={form.achievementLevel}
+                  award={form.achievementAward}
+                  onChange={handleChange}
+                  labelClass="mb-2 block text-sm font-semibold"
+                  inputClass="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm"
+                />
+              )}
+
             </div>
 
 
@@ -635,7 +672,9 @@ export default function EditMagazineContentPage() {
               <label className="mb-2 block text-sm font-semibold">
                 {isCreative
                   ? "Write-up"
-                  : "Description"}
+                  : isAchievement
+                    ? "About the Achievement"
+                    : "Description"}
               </label>
 
               <textarea
@@ -803,7 +842,9 @@ export default function EditMagazineContentPage() {
                 <label className="mb-2 block text-sm font-semibold">
                   {isCreative
                     ? "Image of Your Work"
-                    : "Event Photo"}
+                    : isAchievement
+                      ? "Photo or Certificate"
+                      : "Event Photo"}
                 </label>
 
                 {eventPreview ||

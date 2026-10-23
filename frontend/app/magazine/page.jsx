@@ -22,6 +22,7 @@ import {
 } from "react";
 
 import { normalizeDepartment } from "../lib/departments";
+import { achievementSummary } from "../lib/achievement";
 
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
@@ -30,6 +31,7 @@ const SECTIONS = [
   { value: "all", label: "All" },
   { value: "activity", label: "College Activities" },
   { value: "creative", label: "Creative Corner" },
+  { value: "achievement", label: "Achievements" },
 ];
 
 export default function MagazinePage() {
@@ -192,6 +194,11 @@ export default function MagazinePage() {
             designation:
               faculty.designation ||
               "",
+
+            achievementText:
+              achievementSummary(
+                article.achievement
+              ),
 
             registerNumber:
               student.registerNumber ||
@@ -750,6 +757,12 @@ function ArticleCard({
             {article.title}
           </h2>
 
+          {article.achievementText && (
+            <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-800">
+              🏆 {article.achievementText}
+            </p>
+          )}
+
           <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-500">
             {article.description}
           </p>
@@ -924,6 +937,12 @@ function ArticleModal({
               <h2 className="mt-2 text-2xl font-black leading-tight text-slate-900 sm:text-3xl">
                 {article.title}
               </h2>
+
+              {article.achievementText && (
+                <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1.5 text-sm font-bold text-amber-800">
+                  🏆 {article.achievementText}
+                </p>
+              )}
 
               <div className="mt-4 flex flex-wrap gap-4 text-xs text-slate-500">
                 <span className="inline-flex items-center gap-1.5">
