@@ -358,6 +358,18 @@ export const createMagazineContent = async (
     const isCreative =
       contentType === "creative";
 
+    // Students post their own work and achievements only
+    if (
+      getRole(user) === "student" &&
+      contentType === "activity"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "College activities are posted by the department coordinator. Please choose a category for your own work or achievement.",
+      });
+    }
+
     if (!isCreative && !eventDate) {
       return res.status(400).json({
         success: false,
@@ -1170,6 +1182,23 @@ export const updateMagazineContent =
             success: false,
             message:
               "Selected activity is inactive.",
+          });
+        }
+
+        // A student may not move a post into a college activity
+        const changesCategory =
+          String(content.activity) !==
+          String(activityDocument._id);
+
+        if (
+          getRole(user) === "student" &&
+          changesCategory &&
+          (activityDocument.type || "activity") === "activity"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "College activities are posted by the department coordinator.",
           });
         }
 

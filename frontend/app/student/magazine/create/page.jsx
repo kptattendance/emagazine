@@ -23,7 +23,6 @@ const { getToken } = useAuth();
   const [userData, setUserData] = useState(null);
 
   // activity → college activity, creative → own work
-  const [postType, setPostType] = useState("activity");
   const [originalWork, setOriginalWork] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
@@ -201,31 +200,39 @@ useEffect(() => {
   =====================================================
   */
 
-  const isCreative = postType === "creative";
+  /*
+  Students submit their own work (article, poem, drawing...)
+  and achievements. College activities are posted by the
+  department coordinator.
+  */
 
-  const isAchievement = postType === "achievement";
+  const STUDENT_TYPES = ["creative", "achievement"];
 
-  const typeActivities = activities.filter(
-    (activity) =>
-      (activity.type || "activity") === postType
-  );
+  const typeActivities = activities
+    .filter((activity) =>
+      STUDENT_TYPES.includes(activity.type || "activity")
+    )
+    // Own work first, then achievements
+    .sort(
+      (a, b) =>
+        STUDENT_TYPES.indexOf(a.type) -
+        STUDENT_TYPES.indexOf(b.type)
+    );
 
   const selectedActivity = activities.find(
     (activity) => activity._id === form.activity
   );
 
+  // The chosen category decides which fields are asked for
+  const postType = selectedActivity?.type || "creative";
+
+  const isCreative = postType === "creative";
+
+  const isAchievement = postType === "achievement";
+
   const imageRequired =
     !isCreative ||
     selectedActivity?.imageRequired !== false;
-
-  const handlePostTypeChange = (type) => {
-    setPostType(type);
-
-    setForm((prev) => ({
-      ...prev,
-      activity: "",
-    }));
-  };
 
 
   /*
@@ -788,53 +795,9 @@ useEffect(() => {
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Choose what you are submitting and enter its details.
+                Choose a category and enter the details.
               </p>
             </div>
-
-            {/* POST TYPE */}
-
-            <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {[
-                {
-                  value: "activity",
-                  title: "College Activity",
-                  text: "An event, visit, workshop or programme.",
-                },
-                {
-                  value: "creative",
-                  title: "My Own Work",
-                  text: "An article, poem, story, drawing or photograph.",
-                },
-                {
-                  value: "achievement",
-                  title: "My Achievement",
-                  text: "A prize, rank, medal or selection you won.",
-                },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() =>
-                    handlePostTypeChange(option.value)
-                  }
-                  className={`rounded-xl border px-4 py-3 text-left transition ${
-                    postType === option.value
-                      ? "border-[#d4a017] bg-[#d4a017]/10"
-                      : "border-slate-300 bg-white hover:bg-slate-50"
-                  }`}
-                >
-                  <p className="text-sm font-semibold text-slate-800">
-                    {option.title}
-                  </p>
-
-                  <p className="mt-1 text-xs text-slate-500">
-                    {option.text}
-                  </p>
-                </button>
-              ))}
-            </div>
-
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
@@ -854,9 +817,9 @@ useEffect(() => {
                   value={form.title}
                   onChange={handleChange}
                   placeholder={
-                    isCreative
-                      ? "Title of your work"
-                      : "Example: Industrial Visit to Infosys"
+                    isAchievement
+                      ? "Example: First Prize in State Level Quiz"
+                      : "Title of your work"
                   }
                   className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#d4a017] focus:ring-2 focus:ring-[#d4a017]/20"
                 />
@@ -867,7 +830,7 @@ useEffect(() => {
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-700">
-                  {isCreative || isAchievement ? "Category" : "Activity"}
+                  Category
                   <span className="text-red-500">
                     {" "}*
                   </span>
@@ -883,9 +846,7 @@ useEffect(() => {
                   <option value="">
                     {loadingActivities
                       ? "Loading..."
-                      : isCreative || isAchievement
-                        ? "Select category"
-                        : "Select activity"}
+                      : "Select category"}
                   </option>
 
                   {typeActivities.map(
@@ -1335,7 +1296,8 @@ useEffect(() => {
                 </p>
 
                 <p className="mt-1 text-sm leading-6 text-slate-600">
-                  After submission, your department coordinator checks
+                  College activities are posted by your department
+                  coordinator. After submission, your department coordinator checks
                   it first. It is then approved for the eMagazine by the
                   HOD, or by the Magazine Institute Coordinator for
                   institute level content.
