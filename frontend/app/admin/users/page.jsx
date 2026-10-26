@@ -105,7 +105,7 @@ const DEPARTMENTS = [
   },
   {
     value: "SC",
-    label: "Science",
+    label: "Science and Humanities",
   },
   {
     value: "IN",

@@ -9,7 +9,7 @@ export const DEPARTMENTS = [
   "PS", // Polymer Technology
   "EC", // Electronics & Communication Engineering
   "CS", // Computer Science & Engineering
-  "SC", // Science
+  "SC", // Science and Humanities
   INSTITUTE_DEPARTMENT, // Institute / Institutional Activities
 ];
 

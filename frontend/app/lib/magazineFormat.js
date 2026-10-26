@@ -346,7 +346,7 @@ export function getDepartmentLabel(
     PT: "Polymer Technology",
     EC: "Electronics & Communication Engineering",
     CS: "Computer Science & Engineering",
-    SC: "Science",
+    SC: "Science and Humanities",
     IN: "Institute",
   };
 

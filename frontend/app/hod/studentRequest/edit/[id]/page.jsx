@@ -62,7 +62,7 @@ const DEPARTMENTS = [
   },
   {
     code: "SC",
-    name: "Science",
+    name: "Science and Humanities",
   },
   {
     code: "IN",

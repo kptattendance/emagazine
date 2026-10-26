@@ -10,7 +10,7 @@ export const DEPARTMENTS = [
   { value: "IN", label: "Institute" },
   { value: "ME", label: "Mechanical Engineering" },
   { value: "PS", label: "Polymer Technology" },
-  { value: "SC", label: "Science" },
+  { value: "SC", label: "Science and Humanities" },
 ];
 
 // Codes used before Automobile became AT and Polymer became PS
