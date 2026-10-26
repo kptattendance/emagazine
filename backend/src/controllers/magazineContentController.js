@@ -6,6 +6,7 @@ import {
 } from "../config/storage.js";
 
 import { ACHIEVEMENT_LEVELS } from "../config/achievement.js";
+import { deleteFeedbackFor } from "./feedbackController.js";
 
 import {
   DEPARTMENTS,
@@ -1877,6 +1878,8 @@ export const deleteMagazineContent = async (
     // =================================================
 
     await MagazineContent.findByIdAndDelete(id);
+
+    await deleteFeedbackFor(id);
 
     return res.status(200).json({
       success: true,

@@ -7,23 +7,36 @@ import {
   ArrowRight,
   BookOpen,
   ChevronDown,
-  Clock3,
   Library,
   Search,
 } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { normalizeDepartment } from "./lib/departments";
 import MagazineTeam from "./components/MagazineTeam";
 import EditorDesk from "./components/EditorDesk";
+import { ArticleCard, ArticleModal } from "./components/Article";
+import { normalizeArticle } from "./lib/magazineFormat";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+// Articles added each time the reader nears the end of the list
+const FEED_STEP = 6;
+
+// Most articles shown on the home page before "View all"
+const FEED_LIMIT = 18;
 
 export default function HomePage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Latest articles: more load as the reader scrolls,
+  // up to FEED_LIMIT; after that, a link to all of them
+  const [visibleCount, setVisibleCount] = useState(FEED_STEP);
+  const [selectedArticle, setSelectedArticle] = useState(null);
+  const loadMoreRef = useRef(null);
 
   const [tableSearch, setTableSearch] = useState("");
   const [tableDepartment, setTableDepartment] = useState("all");
@@ -113,6 +126,34 @@ export default function HomePage() {
       };
     });
   }, [articles]);
+
+  const feedArticles = useMemo(
+    () => articles.map(normalizeArticle),
+    [articles]
+  );
+
+  const feedLimit = Math.min(FEED_LIMIT, feedArticles.length);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount((count) =>
+            Math.min(count + FEED_STEP, FEED_LIMIT)
+          );
+        }
+      },
+      { rootMargin: "300px" }
+    );
+
+    observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [visibleCount, feedLimit]);
 
   const monthOptions = useMemo(() => {
     const map = new Map();
@@ -289,141 +330,142 @@ export default function HomePage() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f7faf9] text-slate-800">
 
-      {/* ARCHIVE */}
+      {/* LATEST ARTICLES */}
 
       <section
-        id="archive"
+        id="latest"
         className="border-b border-amber-100 bg-gradient-to-b from-amber-50/80 via-white to-white"
       >
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
 
-          <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-7">
+            <div className="mb-2 flex items-center gap-2 text-amber-700">
+              <Library size={17} />
 
-            <div>
-              <div className="mb-2 flex items-center gap-2 text-amber-700">
-                <Library size={17} />
-
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] sm:text-xs">
-                  Digital Library
-                </p>
-              </div>
-
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
-                Magazine Archive
-              </h1>
-
-              <p className="mt-1.5 text-sm text-slate-500 sm:text-base">
-                Select an issue to open the magazine.
+              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] sm:text-xs">
+                KPT E-Magazine
               </p>
             </div>
 
-            <div className="flex w-fit items-center gap-2 rounded-xl border border-amber-200 bg-white px-3.5 py-2.5 text-xs font-bold text-amber-800 shadow-sm sm:px-4 sm:text-sm">
-              <BookOpen size={16} />
-              Digital Archive
-            </div>
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
+              Latest from the Magazine
+            </h1>
 
+            <p className="mt-1.5 text-sm text-slate-500 sm:text-base">
+              Tap any article to read it, like it, and leave a comment.
+            </p>
           </div>
 
-          {monthOptions.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-              {monthOptions.map(
-                (issue, index) => (
-                  <Link
-                    key={issue.value}
-                    href={`/magazine?month=${issue.value}`}
-                    className="group overflow-hidden rounded-2xl border border-amber-100 bg-white text-left shadow-sm transition duration-300 hover:-translate-y-1 hover:border-amber-200 hover:shadow-lg"
-                  >
-
-                    <div className="relative flex h-44 items-center justify-center overflow-hidden bg-gradient-to-br from-teal-800 via-teal-800 to-slate-900 sm:h-48">
-
-                      <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-amber-400/20 blur-2xl" />
-
-                      <div className="absolute -bottom-16 -left-12 h-36 w-36 rounded-full bg-teal-400/10 blur-2xl" />
-
-                      <div className="relative text-center">
-
-                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-amber-300 ring-1 ring-white/10">
-                          <BookOpen
-                            size={27}
-                            strokeWidth={1.5}
-                          />
-                        </div>
-
-                        <p className="mt-3 text-[9px] font-bold uppercase tracking-[0.2em] text-teal-200 sm:text-[10px]">
-                          KPT E-Magazine
-                        </p>
-
-                        <p className="mt-1 text-2xl font-black text-white sm:text-3xl">
-                          {getMonthName(
-                            issue.month
-                          )}
-                        </p>
-
-                        <p className="text-sm font-semibold text-amber-300">
-                          {issue.year}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                    <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
-
-                      <div className="min-w-0">
-
-                        <p className="truncate text-sm font-bold text-slate-900 sm:text-base">
-                          {getMonthName(
-                            issue.month
-                          )}{" "}
-                          {issue.year} Issue
-                        </p>
-
-                        <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500">
-                          <Clock3 size={12} />
-
-                          {index === 0
-                            ? "Latest Issue"
-                            : "Archived"}
-                        </p>
-
-                      </div>
-
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-700 transition duration-300 group-hover:bg-teal-700 group-hover:text-white">
-                        <ArrowRight
-                          size={16}
-                        />
-                      </div>
-
-                    </div>
-
-                  </Link>
-                )
-              )}
-
-            </div>
-          ) : (
+          {loading ? (
             <div className="rounded-2xl border border-amber-200 bg-white px-5 py-12 text-center shadow-sm">
+              <div className="mx-auto h-7 w-7 animate-spin rounded-full border-2 border-amber-100 border-t-amber-600" />
 
+              <p className="mt-4 text-sm font-semibold text-slate-600">
+                Loading articles...
+              </p>
+            </div>
+          ) : error ? (
+            <div className="rounded-2xl border border-red-100 bg-red-50 px-5 py-12 text-center">
+              <p className="font-bold text-red-700">
+                Unable to load the magazine.
+              </p>
+            </div>
+          ) : feedArticles.length === 0 ? (
+            <div className="rounded-2xl border border-amber-200 bg-white px-5 py-12 text-center shadow-sm">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 text-amber-400">
                 <BookOpen size={30} />
               </div>
 
               <p className="mt-4 font-bold text-slate-700">
-                {loading
-                  ? "Loading magazine issues..."
-                  : error
-                    ? "Unable to load magazine issues."
-                    : "No magazine issues published yet."}
+                No articles published yet.
               </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {feedArticles
+                  .slice(0, visibleCount)
+                  .map((article) => (
+                    <ArticleCard
+                      key={article._id}
+                      article={article}
+                      onRead={() => setSelectedArticle(article)}
+                    />
+                  ))}
+              </div>
 
+              {/* Reaching this loads the next articles */}
+              {visibleCount < feedLimit && (
+                <div
+                  ref={loadMoreRef}
+                  className="flex justify-center py-8"
+                >
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-teal-100 border-t-teal-700" />
+                </div>
+              )}
+
+              {feedArticles.length > visibleCount &&
+                visibleCount >= feedLimit && (
+                  <div className="mt-8 flex justify-center">
+                    <Link
+                      href="/magazine"
+                      className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
+                    >
+                      View all {feedArticles.length} articles
+                      <ArrowRight size={16} />
+                    </Link>
+                  </div>
+                )}
+            </>
+          )}
+
+          {/* BROWSE BY ISSUE */}
+
+          {monthOptions.length > 0 && (
+            <div className="mt-10 rounded-2xl border border-amber-100 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center gap-2 text-slate-800">
+                <BookOpen size={18} className="text-amber-600" />
+
+                <h2 className="font-black">Browse by Issue</h2>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/magazine"
+                  className="rounded-full bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-teal-800"
+                >
+                  All Articles
+                </Link>
+
+                {monthOptions.map((issue) => (
+                  <Link
+                    key={issue.value}
+                    href={`/magazine?month=${issue.value}`}
+                    className="rounded-full border border-amber-200 bg-amber-50/60 px-4 py-2 text-sm font-semibold text-amber-900 transition hover:border-teal-300 hover:bg-teal-50 hover:text-teal-800"
+                  >
+                    {issue.label}
+                  </Link>
+                ))}
+              </div>
             </div>
           )}
 
         </div>
       </section>
 
-      {/* PUBLICATION SUMMARY */}
+      {selectedArticle && (
+        <ArticleModal
+          article={selectedArticle}
+          onClose={() => setSelectedArticle(null)}
+        />
+      )}
+
+    
+      <EditorDesk />
+
+      <MagazineTeam />
+
+        {/* PUBLICATION SUMMARY */}
 
       <section
         id="publication-summary"
@@ -830,9 +872,6 @@ export default function HomePage() {
         </div>
 
       </section>
-      <EditorDesk />
-
-      <MagazineTeam />
 
 <footer className="border-t border-slate-200 bg-white">
   <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">

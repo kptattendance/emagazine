@@ -13,6 +13,7 @@ import magazineContentRoutes from "./routes/magazineContentRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import teamRoutes from "./routes/teamRoutes.js";
 import editorDeskRoutes from "./routes/editorDeskRoutes.js";
+import feedbackRoutes from "./routes/feedbackRoutes.js";
 import connectDB from "./config/db.js";
 
 dotenv.config();
@@ -104,6 +105,9 @@ app.use(
 app.use("/api/team", teamRoutes);
 
 app.use("/api/editor-desk", editorDeskRoutes);
+
+// Reader comments and likes
+app.use("/api/feedback", feedbackRoutes);
 
 // --------------------------------------------------
 // Unknown route

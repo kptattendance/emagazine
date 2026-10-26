@@ -267,6 +267,17 @@ const magazineContentSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Reader feedback, kept up to date as it changes
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+
+    commentCount: {
+      type: Number,
+      default: 0,
+    },
+
     rejectionReason: {
       type: String,
       default: "",
