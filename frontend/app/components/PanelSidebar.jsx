@@ -8,6 +8,7 @@ import {
   CalendarDays,
   ChevronRight,
   ExternalLink,
+  FileDown,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -71,6 +72,11 @@ const PANELS = {
         href: "/admin/comments",
         icon: MessageCircle,
       },
+      {
+        label: "Monthly PDF",
+        href: "/admin/issue",
+        icon: FileDown,
+      },
     ],
   },
 
@@ -97,6 +103,11 @@ const PANELS = {
         label: "Comments",
         href: "/hod/comments",
         icon: MessageCircle,
+      },
+      {
+        label: "Monthly PDF",
+        href: "/hod/issue",
+        icon: FileDown,
       },
       {
         label: "Magazine Team",
@@ -154,6 +165,11 @@ const PANELS = {
         label: "Comments",
         href: "/coordinator/comments",
         icon: MessageCircle,
+      },
+      {
+        label: "Monthly PDF",
+        href: "/coordinator/issue",
+        icon: FileDown,
       },
     ],
   },

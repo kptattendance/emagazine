@@ -15,6 +15,12 @@ import {
   getHODDepartmentMagazineContents,
 } from "../controllers/magazineContentController.js";
 
+import {
+  getIssueImage,
+  getIssueMonths,
+  getMonthlyIssue,
+} from "../controllers/issueController.js";
+
 import requireAuth from "../middleware/authMiddleware.js";
 import resolveUser from "../middleware/resolveUser.js";
 import requireRole from "../middleware/roleMiddleware.js";
@@ -73,6 +79,14 @@ router.get(
 );
 
 router.use(requireAuth, resolveUser);
+
+
+// Monthly issue PDF: data, months, and photos for it
+router.get("/issue/months", getIssueMonths);
+
+router.get("/issue/image", getIssueImage);
+
+router.get("/issue", getMonthlyIssue);
 
 
 router.post(
