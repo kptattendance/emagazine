@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { normalizeDepartment } from "./lib/departments";
 import MagazineTeam from "./components/MagazineTeam";
+import EditorDesk from "./components/EditorDesk";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -829,6 +830,8 @@ export default function HomePage() {
         </div>
 
       </section>
+      <EditorDesk />
+
       <MagazineTeam />
 
 <footer className="border-t border-slate-200 bg-white">
