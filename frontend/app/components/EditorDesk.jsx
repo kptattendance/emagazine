@@ -90,7 +90,7 @@ export default function EditorDesk() {
               aria-hidden="true"
             />
 
-            <p className="relative whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8">
+            <p className="relative  text-justify whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8">
               {desk.message}
             </p>
 
