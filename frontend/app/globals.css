@@ -9,3 +9,31 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+/* Home page article carousel: slides left forever */
+@keyframes carousel-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    /* one copy of the cards plus the gap after it */
+    transform: translateX(calc(-50% - 0.75rem));
+  }
+}
+
+.carousel-track {
+  animation-name: carousel-slide;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+/* People who turned off motion: no movement, scroll by hand */
+@media (prefers-reduced-motion: reduce) {
+  .carousel {
+    overflow-x: auto;
+  }
+
+  .carousel-track {
+    animation: none;
+  }
+}

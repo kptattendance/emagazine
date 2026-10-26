@@ -11,32 +11,27 @@ import {
   Search,
 } from "lucide-react";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { normalizeDepartment } from "./lib/departments";
 import MagazineTeam from "./components/MagazineTeam";
 import EditorDesk from "./components/EditorDesk";
-import { ArticleCard, ArticleModal } from "./components/Article";
+import { ArticleModal } from "./components/Article";
+import ArticleCarousel from "./components/ArticleCarousel";
 import { normalizeArticle } from "./lib/magazineFormat";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Articles added each time the reader nears the end of the list
-const FEED_STEP = 6;
-
-// Most articles shown on the home page before "View all"
-const FEED_LIMIT = 18;
+// Most recent articles moving in the home page carousel
+const CAROUSEL_LIMIT = 20;
 
 export default function HomePage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Latest articles: more load as the reader scrolls,
-  // up to FEED_LIMIT; after that, a link to all of them
-  const [visibleCount, setVisibleCount] = useState(FEED_STEP);
+  // Article opened from the carousel
   const [selectedArticle, setSelectedArticle] = useState(null);
-  const loadMoreRef = useRef(null);
 
   const [tableSearch, setTableSearch] = useState("");
   const [tableDepartment, setTableDepartment] = useState("all");
@@ -128,32 +123,10 @@ export default function HomePage() {
   }, [articles]);
 
   const feedArticles = useMemo(
-    () => articles.map(normalizeArticle),
+    () => articles.slice(0, CAROUSEL_LIMIT).map(normalizeArticle),
     [articles]
   );
 
-  const feedLimit = Math.min(FEED_LIMIT, feedArticles.length);
-
-  useEffect(() => {
-    const sentinel = loadMoreRef.current;
-
-    if (!sentinel) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          setVisibleCount((count) =>
-            Math.min(count + FEED_STEP, FEED_LIMIT)
-          );
-        }
-      },
-      { rootMargin: "300px" }
-    );
-
-    observer.observe(sentinel);
-
-    return () => observer.disconnect();
-  }, [visibleCount, feedLimit]);
 
   const monthOptions = useMemo(() => {
     const map = new Map();
@@ -352,7 +325,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-1.5 text-sm text-slate-500 sm:text-base">
-              Tap any article to read it, like it, and leave a comment.
+              Tap any article to read it, like it, and leave a comment. Hover or touch to pause.
             </p>
           </div>
 
@@ -382,40 +355,20 @@ export default function HomePage() {
             </div>
           ) : (
             <>
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {feedArticles
-                  .slice(0, visibleCount)
-                  .map((article) => (
-                    <ArticleCard
-                      key={article._id}
-                      article={article}
-                      onRead={() => setSelectedArticle(article)}
-                    />
-                  ))}
-              </div>
+              <ArticleCarousel
+                articles={feedArticles}
+                onRead={setSelectedArticle}
+              />
 
-              {/* Reaching this loads the next articles */}
-              {visibleCount < feedLimit && (
-                <div
-                  ref={loadMoreRef}
-                  className="flex justify-center py-8"
+              <div className="mt-6 flex justify-center">
+                <Link
+                  href="/magazine"
+                  className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
                 >
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-teal-100 border-t-teal-700" />
-                </div>
-              )}
-
-              {feedArticles.length > visibleCount &&
-                visibleCount >= feedLimit && (
-                  <div className="mt-8 flex justify-center">
-                    <Link
-                      href="/magazine"
-                      className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
-                    >
-                      View all {feedArticles.length} articles
-                      <ArrowRight size={16} />
-                    </Link>
-                  </div>
-                )}
+                  View all {feedArticles.length} articles
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
             </>
           )}
 

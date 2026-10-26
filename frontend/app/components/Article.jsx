@@ -32,18 +32,30 @@ and the magazine page.
 export function ArticleCard({
   article,
   onRead,
+  // Off inside the moving carousel: a photo click opens the article
+  photoPreview = true,
 }) {
   const [previewImage, setPreviewImage] = useState(null);
+
+  const openPhoto = (photo) => {
+    if (photoPreview) {
+      setPreviewImage(photo);
+    } else {
+      onRead();
+    }
+  };
 
   return (
     <>
       <article className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg">
 
         <div
-          className="relative h-56 cursor-zoom-in overflow-hidden bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900"
+          className={`relative h-56 overflow-hidden ${photoPreview ? "cursor-zoom-in" : "cursor-pointer"} bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900`}
           onClick={() => {
             if (article.eventPhoto) {
-              setPreviewImage(article.eventPhoto);
+              openPhoto(article.eventPhoto);
+            } else if (!photoPreview) {
+              onRead();
             }
           }}
         >
@@ -79,7 +91,7 @@ export function ArticleCard({
 
           {article.eventPhoto && (
             <div className="absolute bottom-4 right-4 rounded-full bg-black/50 px-3 py-1.5 text-[10px] font-semibold text-white backdrop-blur-sm pointer-events-none">
-              Click to enlarge
+              {photoPreview ? "Click to enlarge" : "Tap to read"}
             </div>
           )}
         </div>
@@ -115,7 +127,7 @@ export function ArticleCard({
                   alt={article.studentName}
                   onClick={(event) => {
                     event.stopPropagation();
-                    setPreviewImage(article.studentPhoto);
+                    openPhoto(article.studentPhoto);
                   }}
                   className="h-9 w-9 cursor-zoom-in rounded-full object-cover transition hover:scale-110"
                 />
