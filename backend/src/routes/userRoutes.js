@@ -17,7 +17,9 @@ import {
 
 import {
   deleteAccountCompletely,
+  deleteAccountsBulk,
   getAccountFootprint,
+  getBulkFootprint,
   listClerkUsers,
 } from "../controllers/accountController.js";
 
@@ -71,6 +73,22 @@ router.get(
   resolveUser,
   requireRole("admin"),
   getAccountFootprint
+);
+
+router.post(
+  "/clerk/bulk-footprint",
+  requireAuth,
+  resolveUser,
+  requireRole("admin"),
+  getBulkFootprint
+);
+
+router.post(
+  "/clerk/bulk-delete",
+  requireAuth,
+  resolveUser,
+  requireRole("admin"),
+  deleteAccountsBulk
 );
 
 router.delete(
