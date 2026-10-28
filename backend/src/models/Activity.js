@@ -13,10 +13,11 @@ const activitySchema = new mongoose.Schema(
     activity → college event / activity report
     creative → own work (article, poem, drawing...)
     achievement → a prize, rank or selection someone won
+    club        → an activity of a college club (NSS, NCC...)
     */
     type: {
       type: String,
-      enum: ["activity", "creative", "achievement"],
+      enum: ["activity", "club", "creative", "achievement"],
       default: "activity",
     },
 

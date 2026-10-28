@@ -28,11 +28,12 @@ const magazineContentSchema = new mongoose.Schema(
     activity → college event / activity report
     creative → own work (article, poem, drawing...)
     achievement → a prize, rank or selection someone won
+    club        → an activity of a college club
     */
 
     contentType: {
       type: String,
-      enum: ["activity", "creative", "achievement"],
+      enum: ["activity", "club", "creative", "achievement"],
       default: "activity",
     },
 
@@ -269,11 +270,6 @@ const magazineContentSchema = new mongoose.Schema(
 
     // Reader feedback, kept up to date as it changes
     likeCount: {
-      type: Number,
-      default: 0,
-    },
-
-    commentCount: {
       type: Number,
       default: 0,
     },

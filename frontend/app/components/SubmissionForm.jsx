@@ -146,7 +146,12 @@ export default function SubmissionForm({
           String(content.submittedBy?.role || "").toLowerCase()
         );
 
-        setPostType(content.contentType || "activity");
+        // Achievements are chosen under "My Own Work"
+        setPostType(
+          content.contentType === "achievement"
+            ? "creative"
+            : content.contentType || "activity"
+        );
 
         setForm({
           title: content.title || "",
@@ -185,6 +190,10 @@ export default function SubmissionForm({
           (item) => item.faculty?.designation
         )?.faculty.designation || "";
 
+      if (userData.role === "club_incharge") {
+        setPostType("club");
+      }
+
       setForm((previous) => ({
         ...previous,
         department: ["mag_coordinator", "club_incharge"].includes(
@@ -218,17 +227,32 @@ export default function SubmissionForm({
      DERIVED VALUES
   ========================================================= */
 
-  const typeActivities = activities.filter(
-    (activity) => (activity.type || "activity") === postType
-  );
+  /*
+  "My Own Work" lists own-work and achievement categories
+  together; the chosen category decides which fields show.
+  */
+  const typesForChoice = (choice) =>
+    choice === "creative" ? ["creative", "achievement"] : [choice];
+
+  const typeActivities = activities
+    .filter((activity) =>
+      typesForChoice(postType).includes(activity.type || "activity")
+    )
+    // Own work first, then achievements
+    .sort(
+      (a, b) =>
+        typesForChoice(postType).indexOf(a.type || "activity") -
+        typesForChoice(postType).indexOf(b.type || "activity")
+    );
 
   const selectedActivity = activities.find(
     (activity) => activity._id === form.activity
   );
 
-  const isCreative = postType === "creative";
+  const isAchievement =
+    postType === "creative" && selectedActivity?.type === "achievement";
 
-  const isAchievement = postType === "achievement";
+  const isCreative = postType === "creative" && !isAchievement;
 
   const imageRequired =
     !isCreative || selectedActivity?.imageRequired !== false;
@@ -558,14 +582,14 @@ export default function SubmissionForm({
                     text: "An event, visit, workshop or programme.",
                   },
                   {
-                    value: "creative",
-                    title: "My Own Work",
-                    text: "An article, poem, story, drawing or photograph.",
+                    value: "club",
+                    title: "Club Activity",
+                    text: "NSS, NCC or a club event.",
                   },
                   {
-                    value: "achievement",
-                    title: "My Achievement",
-                    text: "A prize, rank, medal or selection you won.",
+                    value: "creative",
+                    title: "My Own Work",
+                    text: "An article, poem, drawing, or an achievement.",
                   },
                 ].map((option) => (
                   <button

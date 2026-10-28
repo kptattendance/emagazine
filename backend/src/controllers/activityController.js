@@ -1,7 +1,7 @@
 import Activity from "../models/Activity.js";
 import MagazineContent from "../models/MagazineContent.js";
 
-const ACTIVITY_TYPES = ["activity", "creative", "achievement"];
+const ACTIVITY_TYPES = ["activity", "club", "creative", "achievement"];
 
 /*
 =====================================================

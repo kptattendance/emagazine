@@ -325,7 +325,7 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-1.5 text-sm text-slate-500 sm:text-base">
-              Tap any article to read it, like it, and leave a comment. Hover or touch to pause.
+              Tap any article to read, like and share it. Hover or touch to pause.
             </p>
           </div>
 
@@ -584,15 +584,16 @@ export default function HomePage() {
 
                 <div className="overflow-hidden rounded-2xl border border-slate-200 shadow-sm">
 
-                  <div className="overflow-x-auto">
+                  {/* Header row and Total row stay in place; the rows between scroll */}
+                  <div className="max-h-[440px] overflow-auto">
 
-                    <table className="w-full min-w-[720px] border-collapse text-sm">
+                    <table className="w-full min-w-[720px] border-separate border-spacing-0 text-sm">
 
                       <thead>
 
                         <tr className="bg-slate-50">
 
-                          <th className="sticky left-0 z-20 border-b border-r border-slate-200 bg-slate-50 px-4 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-slate-500 sm:px-5">
+                          <th className="sticky left-0 top-0 z-30 border-b border-r border-slate-200 bg-slate-50 px-4 py-3.5 text-left text-[10px] font-extrabold uppercase tracking-wider text-slate-500 sm:px-5">
                             Activity
                           </th>
 
@@ -605,7 +606,7 @@ export default function HomePage() {
                                 title={getDepartmentLabel(
                                   department
                                 )}
-                                className="border-b border-slate-200 px-3 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500"
+                                className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50 px-3 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500"
                               >
                                 {getDepartmentCode(
                                   department
@@ -614,7 +615,7 @@ export default function HomePage() {
                             )
                           )}
 
-                          <th className="border-b border-slate-200 px-4 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
+                          <th className="sticky top-0 z-20 border-b border-slate-200 bg-slate-50 px-4 py-3.5 text-center text-[10px] font-extrabold uppercase tracking-wider text-slate-500">
                             Total
                           </th>
 
@@ -714,7 +715,7 @@ export default function HomePage() {
 
                         <tr className="bg-slate-50">
 
-                          <td className="sticky left-0 z-10 border-r border-slate-200 bg-slate-50 px-4 py-3.5 font-black text-slate-800 sm:px-5">
+                          <td className="sticky bottom-0 left-0 z-30 border-r border-t border-slate-200 bg-slate-50 px-4 py-3.5 font-black text-slate-800 sm:px-5">
                             Total
                           </td>
 
@@ -750,7 +751,7 @@ export default function HomePage() {
                                   key={
                                     department
                                   }
-                                  className="px-3 py-3.5 text-center font-black text-teal-700"
+                                  className="sticky bottom-0 z-20 border-t border-slate-200 bg-slate-50 px-3 py-3.5 text-center font-black text-teal-700"
                                 >
                                   {total}
                                 </td>
@@ -758,7 +759,7 @@ export default function HomePage() {
                             }
                           )}
 
-                          <td className="px-4 py-3.5 text-center font-black text-slate-900">
+                          <td className="sticky bottom-0 z-20 border-t border-slate-200 bg-slate-50 px-4 py-3.5 text-center font-black text-slate-900">
                             {publicationTable.activities.reduce(
                               (
                                 grandTotal,

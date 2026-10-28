@@ -220,7 +220,8 @@ export default function ActivityPage() {
         order: Number(form.order) || 0,
         type: form.type,
         imageRequired:
-          form.type === "activity" || form.imageRequired,
+          ["activity", "club"].includes(form.type) ||
+          form.imageRequired,
       };
 
       let response;
@@ -809,6 +810,12 @@ export default function ActivityPage() {
                             {activity.name}
                           </p>
 
+                          {activity.type === "club" && (
+                            <span className="mt-1 inline-flex rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700">
+                              Club activity
+                            </span>
+                          )}
+
                           {activity.type === "achievement" && (
                             <span className="mt-1 inline-flex rounded-full bg-violet-50 px-2.5 py-0.5 text-xs font-semibold text-violet-700">
                               Achievement category
@@ -998,6 +1005,10 @@ export default function ActivityPage() {
                 >
                   <option value="activity">
                     College activity (event, visit, workshop...)
+                  </option>
+
+                  <option value="club">
+                    Club activity (NSS, NCC, clubs...)
                   </option>
 
                   <option value="creative">

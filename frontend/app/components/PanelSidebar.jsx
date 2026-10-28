@@ -14,7 +14,6 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
-  MessageCircle,
   Newspaper,
   PenLine,
   UserRound,
@@ -74,11 +73,6 @@ const PANELS = {
         icon: UserRound,
       },
       {
-        label: "Comments",
-        href: "/admin/comments",
-        icon: MessageCircle,
-      },
-      {
         label: "Monthly PDF",
         href: "/admin/issue",
         icon: FileDown,
@@ -104,11 +98,6 @@ const PANELS = {
         label: "New Submission",
         href: "/hod/newSubmission",
         icon: PenLine,
-      },
-      {
-        label: "Comments",
-        href: "/hod/comments",
-        icon: MessageCircle,
       },
       {
         label: "Monthly PDF",
@@ -166,11 +155,6 @@ const PANELS = {
         label: "New Submission",
         href: "/coordinator/new",
         icon: PenLine,
-      },
-      {
-        label: "Comments",
-        href: "/coordinator/comments",
-        icon: MessageCircle,
       },
       {
         label: "Monthly PDF",

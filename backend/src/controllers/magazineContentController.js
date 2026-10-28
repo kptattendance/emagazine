@@ -362,7 +362,7 @@ export const createMagazineContent = async (
     // Students post their own work and achievements only
     if (
       getRole(user) === "student" &&
-      contentType === "activity"
+      ["activity", "club"].includes(contentType)
     ) {
       return res.status(400).json({
         success: false,
@@ -892,7 +892,7 @@ export const getPublishedMagazineContents =
           status: "published",
         })
           .select(
-            "-student.phone -submittedBy.email"
+            "-student.phone -submittedBy.email -commentCount"
           )
           .populate(
             "activity",
@@ -922,6 +922,49 @@ export const getPublishedMagazineContents =
       });
     }
   };
+
+
+/*
+=====================================================
+ONE PUBLISHED ARTICLE (PUBLIC)
+=====================================================
+
+Used for the preview a shared link shows in WhatsApp
+and other apps.
+=====================================================
+*/
+
+export const getPublishedArticle = async (req, res) => {
+  try {
+    const article = await MagazineContent.findOne({
+      _id: req.params.id,
+      status: "published",
+    })
+      .select(
+        "title description eventPhoto department contentType achievement eventDate student.name faculty.name"
+      )
+      .populate("activity", "name")
+      .lean();
+
+    if (!article) {
+      return res.status(404).json({
+        success: false,
+        message: "Article not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: article,
+    });
+  } catch (error) {
+    // An invalid id is simply "not found"
+    return res.status(404).json({
+      success: false,
+      message: "Article not found.",
+    });
+  }
+};
 
 
 /*
@@ -1194,7 +1237,9 @@ export const updateMagazineContent =
         if (
           getRole(user) === "student" &&
           changesCategory &&
-          (activityDocument.type || "activity") === "activity"
+          ["activity", "club"].includes(
+            activityDocument.type || "activity"
+          )
         ) {
           return res.status(400).json({
             success: false,

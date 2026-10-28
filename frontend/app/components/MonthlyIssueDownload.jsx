@@ -207,8 +207,8 @@ export default function MonthlyIssueDownload() {
 
       <p className="mt-1 text-sm text-slate-500">
         A colourful PDF of the month&apos;s published articles, with
-        photos, authors, likes and reader comments, on the college
-        letterhead. Ready to circulate.
+        photos and authors, on the college letterhead. Ready to
+        circulate.
       </p>
 
       <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">

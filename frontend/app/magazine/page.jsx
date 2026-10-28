@@ -34,6 +34,7 @@ const API_URL =
 const SECTIONS = [
   { value: "all", label: "All" },
   { value: "activity", label: "College Activities" },
+  { value: "club", label: "Club Activities" },
   { value: "creative", label: "Creative Corner" },
   { value: "achievement", label: "Achievements" },
 ];
@@ -66,6 +67,10 @@ export default function MagazinePage() {
   const [selectedArticle, setSelectedArticle] =
     useState(null);
 
+  // A shared link (?article=<id>) opens that article
+  const [linkedArticleId, setLinkedArticleId] =
+    useState("");
+
   useEffect(() => {
     const params = new URLSearchParams(
       window.location.search
@@ -77,6 +82,8 @@ export default function MagazinePage() {
     if (month) {
       setSelectedIssue(month);
     }
+
+    setLinkedArticleId(params.get("article") || "");
   }, []);
 
   useEffect(() => {
@@ -138,6 +145,19 @@ export default function MagazinePage() {
       () => articles.map(normalizeArticle),
       [articles]
     );
+
+  useEffect(() => {
+    if (!linkedArticleId) return;
+
+    const article = normalizedArticles.find(
+      (item) => String(item._id) === linkedArticleId
+    );
+
+    if (article) {
+      setSelectedArticle(article);
+      setLinkedArticleId("");
+    }
+  }, [linkedArticleId, normalizedArticles]);
 
   const issueArticles =
     useMemo(() => {

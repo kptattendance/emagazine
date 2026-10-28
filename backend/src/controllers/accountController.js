@@ -12,8 +12,8 @@ Admin only. Lists every Clerk login, linked to its app
 account in MongoDB where there is one, and deletes a
 person's accounts: the login and the app account.
 
-Their magazine submissions stay, with name, photos,
-comments and likes. Only the private contact details
+Their magazine submissions stay, with name, photos
+and likes. Only the private contact details
 inside them (phone number and e-mail) are cleared.
 =====================================================
 */

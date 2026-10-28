@@ -6,6 +6,7 @@ import {
   getMagazineContents,
   getMyMagazineContents,
   getPublishedMagazineContents,
+  getPublishedArticle,
   getPendingMagazineContents,
   getMagazineContentById,
   updateMagazineContent,
@@ -76,6 +77,11 @@ Everything else needs a logged-in application user.
 router.get(
   "/published",
   getPublishedMagazineContents
+);
+
+router.get(
+  "/published/:id",
+  getPublishedArticle
 );
 
 router.use(requireAuth, resolveUser);

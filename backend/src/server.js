@@ -106,7 +106,7 @@ app.use("/api/team", teamRoutes);
 
 app.use("/api/editor-desk", editorDeskRoutes);
 
-// Reader comments and likes
+// Reader likes
 app.use("/api/feedback", feedbackRoutes);
 
 // --------------------------------------------------

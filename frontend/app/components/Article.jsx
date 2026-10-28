@@ -8,7 +8,6 @@ import {
   CalendarDays,
   GraduationCap,
   Heart,
-  MessageCircle,
   X,
   Image as ImageIcon,
 } from "lucide-react";
@@ -20,7 +19,7 @@ import {
   getDepartmentLabel,
 } from "../lib/magazineFormat";
 
-import ArticleFeedback from "./ArticleFeedback";
+import ArticleActions from "./ArticleActions";
 
 /*
 ============================================================
@@ -175,11 +174,6 @@ export function ArticleCard({
               <span className="inline-flex items-center gap-1">
                 <Heart size={14} />
                 {article.likeCount || 0}
-              </span>
-
-              <span className="inline-flex items-center gap-1">
-                <MessageCircle size={14} />
-                {article.commentCount || 0}
               </span>
             </span>
           </div>
@@ -374,7 +368,7 @@ export function ArticleModal({
                 </div>
               )}
 
-              <ArticleFeedback article={article} />
+              <ArticleActions article={article} />
 
             </div>
           </div>

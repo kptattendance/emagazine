@@ -344,7 +344,9 @@ export default function ReviewRequests({
                           ? "Own work"
                           : isAchievement
                             ? "Achievement"
-                            : "College activity"}
+                            : content.contentType === "club"
+                              ? "Club activity"
+                              : "College activity"}
                       </p>
 
                       {isAchievement && (

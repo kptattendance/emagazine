@@ -162,7 +162,7 @@ export default function ClerkUsersPage() {
         ].filter(Boolean),
         kept:
           summary.submissions > 0
-            ? `Their ${summary.submissions} submission(s) (${summary.published} published) stay in the magazine with name, photos, comments and likes.`
+            ? `Their ${summary.submissions} submission(s) (${summary.published} published) stay in the magazine with name, photos and likes.`
             : "They have no submissions.",
         confirmText: "Delete account",
       });
@@ -227,7 +227,7 @@ export default function ClerkUsersPage() {
         ].filter(Boolean),
         kept:
           submissions > 0
-            ? `Their ${submissions} submission(s) (${published} published) stay in the magazine with names, photos, comments and likes.`
+            ? `Their ${submissions} submission(s) (${published} published) stay in the magazine with names, photos and likes.`
             : "None of them have submissions.",
         confirmText: `Delete ${summaries.length} account(s)`,
       });

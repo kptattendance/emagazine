@@ -20,7 +20,7 @@ import { achievementSummary } from "../achievement";
 MONTHLY ISSUE (PDF)
 
 Cover page with the month, totals and contents, then every
-article: photo, author, full text, likes and reader comments.
+article: photo, author and full text.
 
 Same college letterhead and footer as the IA progress
 report, on every page.
@@ -48,11 +48,10 @@ const VIOLET = [109, 40, 217];
 const VIOLET_SOFT = [237, 233, 254];
 const ROSE = [225, 29, 72];
 const ROSE_SOFT = [255, 228, 230];
-const SKY = [2, 132, 199];
-const SKY_SOFT = [224, 242, 254];
 
 const TYPE_STYLE = {
   activity: { label: "COLLEGE ACTIVITY", color: TEAL, soft: TEAL_SOFT },
+  club: { label: "CLUB ACTIVITY", color: ROSE, soft: ROSE_SOFT },
   creative: { label: "CREATIVE CORNER", color: VIOLET, soft: VIOLET_SOFT },
   achievement: { label: "ACHIEVEMENT", color: AMBER, soft: AMBER_SOFT },
 };
@@ -370,8 +369,8 @@ const drawCover = (doc, { month, scope, totals }) => {
   // ---- totals
   const tiles = [
     { label: "Articles", value: totals.articles, color: TEAL, soft: TEAL_SOFT },
-    { label: "Likes", value: totals.likes, color: ROSE, soft: ROSE_SOFT },
-    { label: "Comments", value: totals.comments, color: SKY, soft: SKY_SOFT },
+    { label: "Departments", value: totals.departments, color: VIOLET, soft: VIOLET_SOFT },
+    { label: "Achievements", value: totals.achievements, color: ROSE, soft: ROSE_SOFT },
     { label: "Contributors", value: totals.contributors, color: AMBER, soft: AMBER_SOFT },
   ];
 
@@ -613,80 +612,6 @@ const drawArticle = (writer, article, images) => {
   // ---- the article itself
   writer.text(article.description, { size: 10.5, color: BODY, after: 6 });
 
-  // ---- likes and comments
-  writer.ensure(14);
-
-  const comments = article.comments || [];
-  const likesWidth = pill(doc, `LIKES  ${article.likeCount || 0}`, MARGIN, writer.y, {
-    fill: ROSE_SOFT,
-    color: ROSE,
-    size: 8.5,
-    height: 7,
-  });
-
-  pill(doc, `COMMENTS  ${comments.length}`, MARGIN + likesWidth + 3, writer.y, {
-    fill: SKY_SOFT,
-    color: SKY,
-    size: 8.5,
-    height: 7,
-  });
-
-  writer.y += 13;
-
-  // ---- reader comments
-  if (comments.length === 0) {
-    return startPage;
-  }
-
-  writer.ensure(12);
-
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  doc.setTextColor(...INK);
-  doc.text("What Readers Say", MARGIN, writer.y + 4);
-
-  doc.setFillColor(...SKY);
-  doc.rect(MARGIN, writer.y + 6, 16, 1.1, "F");
-
-  writer.y += 11;
-
-  comments.forEach((comment) => {
-    const textWidth = CONTENT_WIDTH - 12;
-    const layout = layoutText(doc, comment.text, { width: textWidth, size: 9.5 });
-    const step = lineHeight(9.5);
-    const boxHeight = 10 + layout.lines.length * step + 2;
-
-    writer.ensure(boxHeight + 3);
-
-    doc.setFillColor(...SKY_SOFT);
-    doc.roundedRect(MARGIN, writer.y, CONTENT_WIDTH, boxHeight, 2.5, 2.5, "F");
-
-    doc.setFillColor(...SKY);
-    doc.roundedRect(MARGIN, writer.y, 1.8, boxHeight, 0.9, 0.9, "F");
-
-    const nameLayout = layoutText(doc, comment.name, { width: 70, size: 9.5, bold: true });
-    drawLine(doc, nameLayout, nameLayout.lines[0] || "", MARGIN + 6, writer.y + 1.6, { size: 9.5, bold: true, color: INK });
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...MUTED);
-    doc.text(
-      `${comment.visitorType}  |  ${comment.place}  |  ${formatDate(comment.createdAt)}`,
-      MARGIN + CONTENT_WIDTH - 4,
-      writer.y + 5.2,
-      { align: "right" }
-    );
-
-    let y = writer.y + 8.5;
-
-    layout.lines.forEach((line) => {
-      drawLine(doc, layout, line, MARGIN + 6, y, { size: 9.5, color: BODY });
-      y += step;
-    });
-
-    writer.y += boxHeight + 3;
-  });
-
   return startPage;
 };
 
@@ -711,10 +636,11 @@ export const buildMonthlyIssuePdf = ({ issue, images, letterhead }) => {
 
   const totals = {
     articles: articles.length,
-    likes: articles.reduce((sum, article) => sum + (article.likeCount || 0), 0),
-    comments: articles.reduce((sum, article) => sum + (article.comments?.length || 0), 0),
+    departments: new Set(articles.map((article) => article.department)).size,
+    achievements: articles.filter((article) => article.contentType === "achievement").length,
     contributors: new Set(articles.map((article) => authorOf(article).name)).size,
   };
+
 
   // ---- cover, and room for a longer contents list
   drawLetterheadHeader(doc, letterhead);

@@ -1,5 +1,4 @@
 import MagazineContent from "../models/MagazineContent.js";
-import Comment from "../models/Comment.js";
 
 // Needed for the category names of the articles
 import "../models/Activity.js";
@@ -81,41 +80,17 @@ export const getMonthlyIssue = async (req, res) => {
 
     const articles = await MagazineContent.find(filter)
       .select(
-        "-student.phone -submittedBy.email -approvedBy -rejectionReason"
+        "-student.phone -submittedBy.email -approvedBy -rejectionReason -likeCount -commentCount"
       )
       .populate("activity", "name type")
       .sort({ department: 1, eventDate: 1, createdAt: 1 })
       .lean();
 
-    const comments = await Comment.find({
-      content: { $in: articles.map((article) => article._id) },
-    })
-      .select("content name visitorType place text createdAt")
-      .sort({ createdAt: 1 })
-      .lean();
-
-    const commentsByArticle = {};
-
-    comments.forEach((comment) => {
-      const key = String(comment.content);
-
-      (commentsByArticle[key] ||= []).push({
-        name: comment.name,
-        visitorType: comment.visitorType,
-        place: comment.place,
-        text: comment.text,
-        createdAt: comment.createdAt,
-      });
-    });
-
     return res.status(200).json({
       success: true,
       month: `${match[1]}-${match[2]}`,
       department,
-      data: articles.map((article) => ({
-        ...article,
-        comments: commentsByArticle[String(article._id)] || [],
-      })),
+      data: articles,
     });
   } catch (error) {
     console.error("GET MONTHLY ISSUE ERROR:", error);
