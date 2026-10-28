@@ -15,6 +15,12 @@ import {
   deleteMultipleUsers,
 } from "../controllers/userController.js";
 
+import {
+  deleteAccountCompletely,
+  getAccountFootprint,
+  listClerkUsers,
+} from "../controllers/accountController.js";
+
 import requireAuth from "../middleware/authMiddleware.js";
 import resolveUser from "../middleware/resolveUser.js";
 import requireRole from "../middleware/roleMiddleware.js";
@@ -49,6 +55,31 @@ router.put(
 // =====================================================
 // ADMIN USER MANAGEMENT
 // =====================================================
+
+// Login accounts in Clerk, and deleting a person completely
+router.get(
+  "/clerk",
+  requireAuth,
+  resolveUser,
+  requireRole("admin"),
+  listClerkUsers
+);
+
+router.get(
+  "/clerk/:clerkUserId/footprint",
+  requireAuth,
+  resolveUser,
+  requireRole("admin"),
+  getAccountFootprint
+);
+
+router.delete(
+  "/clerk/:clerkUserId",
+  requireAuth,
+  resolveUser,
+  requireRole("admin"),
+  deleteAccountCompletely
+);
 
 // Create a user manually
 router.post(

@@ -10,6 +10,7 @@ import {
   ExternalLink,
   FileDown,
   Inbox,
+  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -58,9 +59,14 @@ const PANELS = {
         icon: Newspaper,
       },
       {
-        label: "Users",
+        label: "Mongo Users",
         href: "/admin/users",
         icon: Users,
+      },
+      {
+        label: "Clerk Users",
+        href: "/admin/clerk-users",
+        icon: KeyRound,
       },
       {
         label: "Magazine Team",
