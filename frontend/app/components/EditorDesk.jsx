@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 
-import { PenLine, Quote, UserRound } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  PenLine,
+  Quote,
+  UserRound,
+} from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -16,6 +22,28 @@ Hidden until a message has been written.
 
 export default function EditorDesk() {
   const [desk, setDesk] = useState(null);
+
+  // Long messages start shortened, with "Read more"
+  const [expanded, setExpanded] = useState(false);
+  const [isLong, setIsLong] = useState(false);
+  const messageRef = useRef(null);
+
+  // Is the shortened message hiding anything? Checked again
+  // when the screen size changes (phone turned, etc.)
+  useEffect(() => {
+    const element = messageRef.current;
+
+    if (!element || expanded) return;
+
+    const check = () =>
+      setIsLong(element.scrollHeight > element.clientHeight + 1);
+
+    check();
+
+    window.addEventListener("resize", check);
+
+    return () => window.removeEventListener("resize", check);
+  }, [desk, expanded]);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,9 +118,26 @@ export default function EditorDesk() {
               aria-hidden="true"
             />
 
-            <p className="relative  text-justify whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8">
+            <p
+              ref={messageRef}
+              className={`relative text-justify whitespace-pre-line text-[15px] leading-7 text-slate-700 sm:text-base sm:leading-8 ${
+                expanded ? "" : "line-clamp-6 sm:line-clamp-[12]"
+              }`}
+            >
               {desk.message}
             </p>
+
+            {(isLong || expanded) && (
+              <button
+                type="button"
+                onClick={() => setExpanded((value) => !value)}
+                aria-expanded={expanded}
+                className="mt-3 inline-flex items-center gap-1 rounded-full bg-teal-50 px-4 py-1.5 text-sm font-bold text-teal-700 transition hover:bg-teal-100"
+              >
+                {expanded ? "Show less" : "Read more"}
+                {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+            )}
 
             <div className="mt-6 border-t border-teal-100 pt-4">
               <p className="text-lg font-black text-slate-900">
