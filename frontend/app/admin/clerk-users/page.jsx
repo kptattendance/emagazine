@@ -315,11 +315,9 @@ export default function ClerkUsersPage() {
             </option>
           ))}
 
-          {roleCounts[NO_APP_ACCOUNT] > 0 && (
-            <option value={NO_APP_ACCOUNT}>
-              No app account ({roleCounts[NO_APP_ACCOUNT]})
-            </option>
-          )}
+          <option value={NO_APP_ACCOUNT}>
+            Only in Clerk, not in MongoDB ({roleCounts[NO_APP_ACCOUNT] || 0})
+          </option>
         </select>
       </div>
 
@@ -424,7 +422,7 @@ export default function ClerkUsersPage() {
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700">
                       <UserX size={12} />
-                      No app account
+                      Only in Clerk
                     </span>
                   )}
 

@@ -298,20 +298,30 @@ export default function AdminUsersPage() {
         );
       }
 
-      const response = await axios.get(
-        `${API_URL}/api/users`,
-        {
-          params: {
-            limit: 100,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      // The server sends at most 100 per page; load every page
+      const fetchedUsers = [];
 
-      const fetchedUsers =
-        response.data?.data || [];
+      for (let page = 1; ; page += 1) {
+        const response = await axios.get(
+          `${API_URL}/api/users`,
+          {
+            params: {
+              limit: 100,
+              page,
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        fetchedUsers.push(...(response.data?.data || []));
+
+        const totalPages =
+          response.data?.pagination?.totalPages || 1;
+
+        if (page >= totalPages) break;
+      }
 
       setUsers(
         Array.isArray(fetchedUsers)
