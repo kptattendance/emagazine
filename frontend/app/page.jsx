@@ -22,6 +22,15 @@ import { normalizeArticle } from "./lib/magazineFormat";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+// Type filter of the department-wise table
+const TABLE_TYPES = [
+  { value: "all", label: "All Types" },
+  { value: "activity", label: "College Activities" },
+  { value: "club", label: "Club Activities" },
+  { value: "creative", label: "Creative Corner" },
+  { value: "achievement", label: "Achievements" },
+];
+
 // Most recent articles moving in the home page carousel
 const CAROUSEL_LIMIT = 20;
 
@@ -36,6 +45,7 @@ export default function HomePage() {
   const [tableSearch, setTableSearch] = useState("");
   const [tableDepartment, setTableDepartment] = useState("all");
   const [tableMonth, setTableMonth] = useState("all");
+  const [tableType, setTableType] = useState("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -202,6 +212,14 @@ export default function HomePage() {
       );
     }
 
+    if (tableType !== "all") {
+      source = source.filter(
+        (article) =>
+          (article.contentType || "activity") ===
+          tableType
+      );
+    }
+
     const departmentSet = new Set();
 
     source.forEach((article) => {
@@ -291,6 +309,7 @@ export default function HomePage() {
     normalizedArticles,
     tableMonth,
     tableDepartment,
+    tableType,
     tableSearch,
   ]);
 
@@ -298,6 +317,7 @@ export default function HomePage() {
     setTableSearch("");
     setTableDepartment("all");
     setTableMonth("all");
+    setTableType("all");
   };
 
   return (
@@ -460,7 +480,7 @@ export default function HomePage() {
 
               <div className="mb-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-3 sm:p-4">
 
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_210px_190px_auto]">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_190px_190px_170px_auto]">
 
                   <div className="relative sm:col-span-2 lg:col-span-1">
 
@@ -559,10 +579,44 @@ export default function HomePage() {
 
                   </div>
 
+                  {/* TYPE: college, club, creative, achievement */}
+
+                  <div className="relative">
+
+                    <select
+                      value={tableType}
+                      onChange={(e) =>
+                        setTableType(
+                          e.target.value
+                        )
+                      }
+                      className="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 pr-10 text-sm font-medium outline-none transition focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                    >
+                      {TABLE_TYPES.map(
+                        (type) => (
+                          <option
+                            key={type.value}
+                            value={type.value}
+                          >
+                            {type.label}
+                          </option>
+                        )
+                      )}
+                    </select>
+
+                    <ChevronDown
+                      size={16}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+
+                  </div>
+
                   {(tableSearch ||
                     tableDepartment !==
                       "all" ||
                     tableMonth !==
+                      "all" ||
+                    tableType !==
                       "all") && (
                     <button
                       type="button"
