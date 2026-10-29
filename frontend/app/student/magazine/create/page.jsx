@@ -8,6 +8,8 @@ import { useAuth, useUser } from "@clerk/nextjs";
 
 import AchievementFields from "../../../components/AchievementFields";
 
+import { EARLIEST_EVENT_DATE } from "../../../lib/eventDate";
+
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -876,6 +878,7 @@ useEffect(() => {
 
                 <input
                   type="date"
+                  min={EARLIEST_EVENT_DATE}
                   name="eventDate"
                   value={form.eventDate}
                   onChange={handleChange}

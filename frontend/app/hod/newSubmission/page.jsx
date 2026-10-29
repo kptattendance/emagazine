@@ -18,6 +18,8 @@ import {
   X,
 } from "lucide-react";
 
+import { EARLIEST_EVENT_DATE } from "../../lib/eventDate";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export default function HODMagazineCreatePage() {
@@ -480,6 +482,7 @@ export default function HODMagazineCreatePage() {
 
                   <input
                     type="date"
+                    min={EARLIEST_EVENT_DATE}
                     name="eventDate"
                     value={form.eventDate}
                     onChange={handleChange}

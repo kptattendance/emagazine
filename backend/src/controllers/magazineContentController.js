@@ -6,6 +6,7 @@ import {
 } from "../config/storage.js";
 
 import { ACHIEVEMENT_LEVELS } from "../config/achievement.js";
+import { checkEventDate } from "../config/eventDate.js";
 import { deleteFeedbackFor } from "./feedbackController.js";
 
 import {
@@ -379,6 +380,17 @@ export const createMagazineContent = async (
             ? "Date of the achievement is required."
             : "Event date is required.",
       });
+    }
+
+    if (eventDate) {
+      const dateError = checkEventDate(eventDate);
+
+      if (dateError) {
+        return res.status(400).json({
+          success: false,
+          message: dateError,
+        });
+      }
     }
 
     let achievementDetails = { level: "", award: "" };
@@ -1337,6 +1349,15 @@ export const updateMagazineContent =
         eventDate !== undefined &&
         eventDate !== ""
       ) {
+        const dateError = checkEventDate(eventDate);
+
+        if (dateError) {
+          return res.status(400).json({
+            success: false,
+            message: dateError,
+          });
+        }
+
         content.eventDate =
           new Date(eventDate);
       }

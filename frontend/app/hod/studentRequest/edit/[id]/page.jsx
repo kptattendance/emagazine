@@ -24,6 +24,8 @@ import { useAuth } from "@clerk/nextjs";
 
 import { normalizeDepartment } from "../../../../lib/departments";
 
+import { EARLIEST_EVENT_DATE } from "../../../../lib/eventDate";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
@@ -995,6 +997,7 @@ export default function HODStudentRequestEditPage() {
 
                 <input
                   type="date"
+                  min={EARLIEST_EVENT_DATE}
                   name="eventDate"
                   value={
                     form.eventDate

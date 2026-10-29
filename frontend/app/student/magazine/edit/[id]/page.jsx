@@ -8,6 +8,8 @@ import AchievementFields from "../../../../components/AchievementFields";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 
+import { EARLIEST_EVENT_DATE } from "../../../../lib/eventDate";
+
 const API_URL =
   process.env.NEXT_PUBLIC_API_URL;
 
@@ -643,6 +645,7 @@ export default function EditMagazineContentPage() {
 
                 <input
                   type="date"
+                  min={EARLIEST_EVENT_DATE}
                   name="eventDate"
                   value={
                     form.eventDate

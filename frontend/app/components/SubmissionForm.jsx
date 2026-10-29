@@ -26,6 +26,8 @@ import {
 
 import AchievementFields from "./AchievementFields";
 
+import { EARLIEST_EVENT_DATE } from "../lib/eventDate";
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
@@ -669,6 +671,7 @@ export default function SubmissionForm({
 
                     <input
                       type="date"
+                      min={EARLIEST_EVENT_DATE}
                       name="eventDate"
                       value={form.eventDate}
                       onChange={handleChange}
