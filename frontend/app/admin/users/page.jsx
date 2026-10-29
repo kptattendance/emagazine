@@ -225,6 +225,7 @@ export default function AdminUsersPage() {
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("");
 
   // ===================================================
   // ADD MODAL
@@ -969,10 +970,22 @@ if (!form.department) {
             ? user.isActive === true
             : user.isActive === false);
 
+        // "none" = users without a department
+        const userDepartment = normalizeDepartment(
+          user.department
+        );
+
+        const matchesDepartment =
+          !departmentFilter ||
+          (departmentFilter === "none"
+            ? !userDepartment
+            : userDepartment === departmentFilter);
+
         return (
           matchesSearch &&
           matchesRole &&
-          matchesStatus
+          matchesStatus &&
+          matchesDepartment
         );
       })
       .sort((a, b) =>
@@ -989,6 +1002,7 @@ if (!form.department) {
     search,
     roleFilter,
     statusFilter,
+    departmentFilter,
   ]);
 
   // ===================================================
@@ -1065,6 +1079,7 @@ if (!form.department) {
     setSearch("");
     setRoleFilter("");
     setStatusFilter("");
+    setDepartmentFilter("");
   };
 
   // ===================================================
@@ -1238,7 +1253,7 @@ if (!form.department) {
 
       {/* FILTERS */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_220px_180px_auto]">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_200px_220px_160px_auto]">
 
           {/* SEARCH */}
           <div className="relative">
@@ -1282,6 +1297,34 @@ if (!form.department) {
             ))}
           </select>
 
+
+          {/* DEPARTMENT */}
+          <select
+            value={departmentFilter}
+            onChange={(e) =>
+              setDepartmentFilter(
+                e.target.value
+              )
+            }
+            className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-700 outline-none transition focus:border-amber-500 focus:bg-white focus:ring-2 focus:ring-amber-100"
+          >
+            <option value="">
+              All Departments
+            </option>
+
+            {DEPARTMENTS.map((department) => (
+              <option
+                key={department.value}
+                value={department.value}
+              >
+                {department.label}
+              </option>
+            ))}
+
+            <option value="none">
+              No department
+            </option>
+          </select>
 
           {/* STATUS */}
           <select
