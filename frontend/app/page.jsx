@@ -28,7 +28,6 @@ const TABLE_TYPES = [
   { value: "activity", label: "College Activities" },
   { value: "club", label: "Club Activities" },
   { value: "creative", label: "Creative Corner" },
-  { value: "achievement", label: "Achievements" },
 ];
 
 // Most recent articles moving in the home page carousel

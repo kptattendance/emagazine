@@ -56,6 +56,52 @@ const TYPE_STYLE = {
   achievement: { label: "ACHIEVEMENT", color: AMBER, soft: AMBER_SOFT },
 };
 
+/*
+The issue runs in three parts: institute activities first,
+then department activities, then students' work.
+*/
+const SECTIONS = [
+  {
+    key: "institute",
+    title: "Institute Activities",
+    note: "College-wide events, clubs and programmes",
+    color: TEAL_DARK,
+    soft: TEAL_SOFT,
+  },
+  {
+    key: "department",
+    title: "Department Activities",
+    note: "Events and achievements of each department",
+    color: VIOLET,
+    soft: VIOLET_SOFT,
+  },
+  {
+    key: "student",
+    title: "Student Activities",
+    note: "Writing, art and achievements of our students",
+    color: AMBER,
+    soft: AMBER_SOFT,
+  },
+];
+
+const sectionOf = (article) => {
+  if (String(article.submittedBy?.role || "").toLowerCase() === "student") {
+    return "student";
+  }
+
+  const institute =
+    article.level === "institute" ||
+    String(article.department || "").toUpperCase() === "IN";
+
+  return institute ? "institute" : "department";
+};
+
+// Articles in section order, keeping their order inside each
+const orderBySection = (articles) =>
+  SECTIONS.flatMap((section) =>
+    articles.filter((article) => sectionOf(article) === section.key)
+  );
+
 const typeStyle = (article) =>
   TYPE_STYLE[article.contentType] || TYPE_STYLE.activity;
 
@@ -419,6 +465,8 @@ const drawContents = (doc, letterhead, entries, firstTop, contentsPages) => {
 
   doc.setPage(page);
 
+  let number = 0;
+
   entries.forEach((entry, index) => {
     if (rowsLeft === 0) {
       page += 1;
@@ -430,10 +478,37 @@ const drawContents = (doc, letterhead, entries, firstTop, contentsPages) => {
       rowsLeft = CONTENTS_ROWS_PER_PAGE;
     }
 
+    // ---- section heading row
+    if (entry.section) {
+      doc.setFillColor(...entry.section.color);
+      doc.roundedRect(MARGIN, y - 0.5, CONTENT_WIDTH, CONTENTS_ROW - 2, 2, 2, "F");
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...WHITE);
+      doc.text(entry.section.title.toUpperCase(), MARGIN + 4, y + 4.4);
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(
+        `${entry.count} article${entry.count === 1 ? "" : "s"}`,
+        MARGIN + CONTENT_WIDTH - 4,
+        y + 4.4,
+        { align: "right" }
+      );
+
+      y += CONTENTS_ROW;
+      rowsLeft -= 1;
+
+      return;
+    }
+
+    number += 1;
+
     const style = typeStyle(entry.article);
 
     // zebra background
-    if (index % 2 === 0) {
+    if (number % 2 === 1) {
       doc.setFillColor(248, 250, 252);
       doc.roundedRect(MARGIN, y - 1, CONTENT_WIDTH, CONTENTS_ROW - 1, 2, 2, "F");
     }
@@ -445,7 +520,7 @@ const drawContents = (doc, letterhead, entries, firstTop, contentsPages) => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...WHITE);
-    doc.text(String(index + 1), MARGIN + 4.5, y + 4.4, { align: "center" });
+    doc.text(String(number), MARGIN + 4.5, y + 4.4, { align: "center" });
 
     // title, one line
     const titleWidth = CONTENT_WIDTH - 80;
@@ -490,7 +565,7 @@ ONE ARTICLE
 ============================================================
 */
 
-const drawArticle = (writer, article, images) => {
+const drawArticle = (writer, article, images, section) => {
   const { doc } = writer;
   const style = typeStyle(article);
 
@@ -498,6 +573,27 @@ const drawArticle = (writer, article, images) => {
 
   // Page the article starts on, for the contents list
   const startPage = doc.getNumberOfPages();
+
+  // ---- first article of a section: the section banner
+  if (section) {
+    doc.setFillColor(...section.soft);
+    doc.roundedRect(MARGIN, writer.y, CONTENT_WIDTH, 17, 3, 3, "F");
+
+    doc.setFillColor(...section.color);
+    doc.roundedRect(MARGIN, writer.y, 3, 17, 1.5, 1.5, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(15);
+    doc.setTextColor(...section.color);
+    doc.text(section.title, MARGIN + 8, writer.y + 8);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...BODY);
+    doc.text(section.note, MARGIN + 8, writer.y + 13.5);
+
+    writer.y += 22;
+  }
 
   // ---- coloured strip: type, department, category
   doc.setFillColor(...style.color);
@@ -629,7 +725,14 @@ letterhead from loadLetterhead()
 export const buildMonthlyIssuePdf = ({ issue, images, letterhead }) => {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
 
-  const articles = issue.data || [];
+  const articles = orderBySection(issue.data || []);
+
+  // Sections that have articles this month
+  const sections = SECTIONS.map((section) => ({
+    ...section,
+    count: articles.filter((article) => sectionOf(article) === section.key).length,
+  })).filter((section) => section.count > 0);
+
   const scope = issue.department
     ? `${getDepartmentLabel(issue.department)}`
     : "All Departments";
@@ -647,7 +750,8 @@ export const buildMonthlyIssuePdf = ({ issue, images, letterhead }) => {
 
   const contentsTop = drawCover(doc, { month: issue.month, scope, totals });
 
-  const contentsPages = contentsPagesNeeded(articles.length);
+  // One contents row per article, plus one per section heading
+  const contentsPages = contentsPagesNeeded(articles.length + sections.length);
 
   for (let page = 0; page < contentsPages; page += 1) {
     doc.addPage();
@@ -658,10 +762,28 @@ export const buildMonthlyIssuePdf = ({ issue, images, letterhead }) => {
   const writer = new Writer(doc, letterhead);
   const entries = [];
 
+  let currentSection = null;
+
   articles.forEach((article) => {
+    const key = sectionOf(article);
+    const startsSection = key !== currentSection;
+
+    if (startsSection) {
+      currentSection = key;
+
+      const section = sections.find((item) => item.key === key);
+
+      entries.push({ section, count: section.count });
+    }
+
     entries.push({
       article,
-      page: drawArticle(writer, article, images),
+      page: drawArticle(
+        writer,
+        article,
+        images,
+        startsSection ? sections.find((item) => item.key === key) : null
+      ),
     });
   });
 
