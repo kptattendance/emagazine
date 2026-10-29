@@ -3,7 +3,9 @@ Keep in step with backend/src/config/achievement.js
 */
 
 export const ACHIEVEMENT_LEVELS = [
+  "Local / Community",
   "College",
+  "Taluk",
   "District",
   "State",
   "National",
