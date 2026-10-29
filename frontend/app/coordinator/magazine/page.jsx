@@ -1,17 +1,17 @@
 "use client";
 
-import SubmissionList from "../../components/SubmissionList";
+import MagazineContentTable from "../../components/MagazineContentTable";
+import { isInstituteContent } from "../../lib/departments";
 
 export default function CoordinatorMagazinePage() {
   return (
-    <SubmissionList
-      endpoint="review"
+    <MagazineContentTable
       title="Institute Magazine"
       subtitle="All institute level magazine content."
-      emptyText="There is no institute level magazine content yet."
-      newHref="/coordinator/new"
       editBasePath="/coordinator/edit"
-      canManagePublished
+      canManage={isInstituteContent}
+      onlyShow={isInstituteContent}
+      showDepartmentFilter={false}
     />
   );
 }

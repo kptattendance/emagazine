@@ -167,6 +167,9 @@ export default function MagazineContentTable({
   subtitle = "Manage all institutional magazine content",
   editBasePath = "/admin/magazine/edit",
   canManage = () => true,
+  // Show only the content this returns true for
+  onlyShow = null,
+  showDepartmentFilter = true,
 }) {
   const router = useRouter();
 
@@ -205,7 +208,9 @@ export default function MagazineContentTable({
       );
 
       if (response.data?.success) {
-        setContents(response.data.data || []);
+        const data = response.data.data || [];
+
+        setContents(onlyShow ? data.filter(onlyShow) : data);
       } else {
         setContents([]);
         setError(
@@ -689,6 +694,7 @@ export default function MagazineContentTable({
               </div>
 
               {/* DEPARTMENT */}
+              {showDepartmentFilter && (
               <FilterSelect
                 value={departmentFilter}
                 onChange={setDepartmentFilter}
@@ -700,22 +706,7 @@ export default function MagazineContentTable({
                   ...DEPARTMENTS,
                 ]}
               />
-
-              {/* ACTIVITY */}
-              <FilterSelect
-                value={activityFilter}
-                onChange={setActivityFilter}
-                options={[
-                  {
-                    value: "all",
-                    label: "All Activities",
-                  },
-                  ...activityOptions.map((activity) => ({
-                    value: activity,
-                    label: activity,
-                  })),
-                ]}
-              />
+              )}
 
               {/* STATUS */}
               <FilterSelect
@@ -768,6 +759,22 @@ export default function MagazineContentTable({
                   ...submitterOptions.map((role) => ({
                     value: role,
                     label: getSubmitterRole(role),
+                  })),
+                ]}
+              />
+
+              {/* ACTIVITY */}
+              <FilterSelect
+                value={activityFilter}
+                onChange={setActivityFilter}
+                options={[
+                  {
+                    value: "all",
+                    label: "All Activities",
+                  },
+                  ...activityOptions.map((activity) => ({
+                    value: activity,
+                    label: activity,
                   })),
                 ]}
               />
