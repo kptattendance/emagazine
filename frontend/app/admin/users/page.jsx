@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { showError, showSuccess } from "../../lib/alerts";
 import {
   UserPlus,
   Search,
@@ -13,8 +14,6 @@ import {
   Mail,
   Phone,
   User,
-  CheckCircle2,
-  XCircle,
   BriefcaseBusiness,
   Crown,
   GraduationCap,
@@ -219,8 +218,9 @@ export default function AdminUsersPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+  // Errors and confirmations open as pop-ups, above any open form
+  const setError = showError;
+  const setMessage = showSuccess;
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
@@ -1178,50 +1178,6 @@ if (!form.department) {
           </button>
         </div>
       </div>
-
-      {/* SUCCESS */}
-      {message && (
-        <div className="flex items-start gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-          <CheckCircle2
-            size={19}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{message}</span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setMessage("")
-            }
-            className="ml-auto rounded-lg p-1 hover:bg-green-100"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* ERROR */}
-      {error && (
-        <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <XCircle
-            size={19}
-            className="mt-0.5 shrink-0"
-          />
-
-          <span>{error}</span>
-
-          <button
-            type="button"
-            onClick={() =>
-              setError("")
-            }
-            className="ml-auto rounded-lg p-1 hover:bg-red-100"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
 
       {/* STAT CARDS */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">

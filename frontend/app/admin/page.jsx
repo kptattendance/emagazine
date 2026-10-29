@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { showError } from "../lib/alerts";
 import Link from "next/link";
 
 import {
@@ -41,7 +42,8 @@ export default function AdminPage() {
   const [contents, setContents] = useState([]);
   const [totalUsers, setTotalUsers] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  // Errors open as pop-ups
+  const setError = showError;
 
   /* ================================================= */
   /* LOAD REAL DATA */
@@ -220,11 +222,6 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-red-700">
-          {error}
-        </div>
-      )}
 
       {/* ================================================= */}
       {/* STATISTICS */}

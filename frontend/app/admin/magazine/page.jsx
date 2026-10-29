@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { showError } from "../../lib/alerts";
 
 import {
   DEPARTMENTS,
@@ -26,7 +27,6 @@ import {
   Building2,
   Image as ImageIcon,
   ChevronDown,
-  AlertTriangle,
   Loader2,
 } from "lucide-react";
 
@@ -158,7 +158,8 @@ export default function AdminMagazinePage() {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
 
-  const [error, setError] = useState("");
+  // Errors open as pop-ups
+  const setError = showError;
 
   const [search, setSearch] = useState("");
   const [departmentFilter, setDepartmentFilter] = useState("all");
@@ -593,27 +594,6 @@ export default function AdminMagazinePage() {
           </div>
         </div>
 
-        {/* ERROR */}
-        {error && (
-          <div className="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            <AlertTriangle
-              size={18}
-              className="mt-0.5 shrink-0"
-            />
-
-            <div className="flex-1">
-              {error}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setError("")}
-              className="rounded-lg p-1 hover:bg-red-100"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        )}
 
         {/* STATISTICS */}
         <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
