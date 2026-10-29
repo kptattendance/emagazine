@@ -137,9 +137,10 @@ router.get(
 );
 
 
+// Every submission: admin, and the magazine's institute coordinator
 router.get(
   "/",
-  requireRole("admin"),
+  requireRole("admin", "mag_coordinator"),
   getMagazineContents
 );
 

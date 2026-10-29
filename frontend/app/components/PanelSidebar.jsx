@@ -152,6 +152,16 @@ const PANELS = {
         icon: BookOpen,
       },
       {
+        label: "All Magazine",
+        href: "/coordinator/all-magazine",
+        icon: Newspaper,
+      },
+      {
+        label: "Magazine Team",
+        href: "/coordinator/team",
+        icon: UserRound,
+      },
+      {
         label: "New Submission",
         href: "/coordinator/new",
         icon: PenLine,

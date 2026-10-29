@@ -25,8 +25,8 @@ const TEAM_FOLDER = "kpt-emagazine/team";
 WHO CAN MANAGE THE TEAM
 =====================================================
 
-Admin, and the HOD of the institute department
-(the magazine office).
+Admin, the magazine's institute coordinator, and the
+HOD of the institute department (the magazine office).
 =====================================================
 */
 
@@ -38,11 +38,15 @@ export const requireTeamManager = (req, res, next) => {
     normalizeDepartment(req.user.department) ===
       INSTITUTE_DEPARTMENT;
 
-  if (role !== "admin" && !isInstituteHod) {
+  if (
+    role !== "admin" &&
+    role !== "mag_coordinator" &&
+    !isInstituteHod
+  ) {
     return res.status(403).json({
       success: false,
       message:
-        "Only the admin or the institute HOD can manage the magazine team.",
+        "Only the admin, institute coordinator or institute HOD can manage the magazine team.",
     });
   }
 
