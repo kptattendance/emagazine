@@ -24,8 +24,10 @@ const TYPE_LABEL = {
 ============================================================
 Full-width photo slider at the top of the home page.
 
-One article at a time: its photo fills the width, with the
-title over a dark fade. Slides change on their own, with
+One article at a time. Phones: the photo fills the slide,
+with the title over a dark fade. Laptops: the slide fills
+the screen height, text panel on the left, whole photo on
+the right. Slides change on their own, with
 dots and arrows to move, and a swipe on phones. Clicking a
 slide opens the article.
 ============================================================
@@ -102,10 +104,14 @@ export default function HeroSlider({ articles, onRead }) {
       {/* SLIDES */}
 
       <div
-        className="flex h-[62vh] min-h-[340px] max-h-[680px] transition-transform duration-500 ease-out motion-reduce:transition-none"
+        className="flex h-[62vh] min-h-[340px] max-h-[680px] transition-transform duration-500 ease-out motion-reduce:transition-none lg:h-[calc(100svh-4rem)] lg:min-h-[480px] lg:max-h-none"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {articles.map((article, position) => (
+          /*
+          Phones: photo fills the slide, title over a dark fade.
+          Laptops: text panel on the left, whole photo on the right.
+          */
           <button
             key={article._id}
             type="button"
@@ -113,41 +119,55 @@ export default function HeroSlider({ articles, onRead }) {
             aria-hidden={position !== index}
             tabIndex={position === index ? 0 : -1}
             aria-label={`Read: ${article.title}`}
-            className="relative h-full w-full shrink-0 cursor-pointer text-left"
+            className="relative h-full w-full shrink-0 cursor-pointer text-left lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
           >
-            {article.eventPhoto ? (
-              <FittedImage
-                src={article.eventPhoto}
-                eager={position === 0}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900">
-                <Newspaper size={90} className="text-white/15" />
-              </div>
-            )}
-
-            {/* dark fade so the title reads on any photo */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-
-            <div className="absolute inset-x-0 bottom-0 px-5 pb-14 sm:px-10 sm:pb-16 lg:px-16">
-              <div className="mx-auto max-w-6xl">
-                <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/85 sm:text-xs">
-                  <span className="rounded-full bg-amber-400 px-3 py-1 text-slate-900">
-                    {article.activityName ||
-                      TYPE_LABEL[article.contentType] ||
-                      "KPT E-Magazine"}
-                  </span>
-
-                  <span>
-                    {getDepartmentLabel(article.departmentName)}
-                    {article.eventDate && ` · ${formatDate(article.eventDate)}`}
-                  </span>
+            {/* PHOTO */}
+            <div className="absolute inset-0 overflow-hidden lg:relative lg:order-2 lg:h-full">
+              {article.eventPhoto ? (
+                <FittedImage
+                  src={article.eventPhoto}
+                  eager={position === 0}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900">
+                  <Newspaper size={90} className="text-white/15" />
                 </div>
+              )}
+            </div>
 
-                <h2 className="line-clamp-3 max-w-4xl text-2xl font-black leading-tight text-white drop-shadow sm:text-4xl lg:text-5xl">
-                  {article.title}
-                </h2>
+            {/* dark fade so the title reads on the photo (phones) */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent lg:hidden" />
+
+            {/* TEXT */}
+            <div className="absolute inset-x-0 bottom-0 px-5 pb-14 sm:px-10 sm:pb-16 lg:relative lg:order-1 lg:flex lg:h-full lg:flex-col lg:justify-center lg:bg-gradient-to-br lg:from-teal-900 lg:via-teal-950 lg:to-slate-950 lg:px-14 lg:pb-0 xl:px-20">
+              <div className="mb-3 flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/85 sm:text-xs lg:mb-5">
+                <span className="rounded-full bg-amber-400 px-3 py-1 text-slate-900">
+                  {article.activityName ||
+                    TYPE_LABEL[article.contentType] ||
+                    "KPT E-Magazine"}
+                </span>
+
+                <span>
+                  {getDepartmentLabel(article.departmentName)}
+                  {article.eventDate && ` · ${formatDate(article.eventDate)}`}
+                </span>
               </div>
+
+              <h2 className="line-clamp-3 max-w-4xl text-2xl font-black leading-tight text-white drop-shadow sm:text-4xl lg:line-clamp-4 lg:text-4xl xl:text-5xl">
+                {article.title}
+              </h2>
+
+              {/* laptops: a short preview and a clear call to read */}
+              {article.description && (
+                <p className="mt-5 hidden whitespace-pre-line text-base leading-7 text-teal-50/80 lg:line-clamp-4">
+                  {article.description}
+                </p>
+              )}
+
+              <span className="mt-8 hidden w-fit items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold text-teal-900 shadow-lg transition group-hover:bg-amber-300 lg:inline-flex">
+                Read article
+                <ChevronRight size={17} />
+              </span>
             </div>
           </button>
         ))}
@@ -180,7 +200,7 @@ export default function HeroSlider({ articles, onRead }) {
       {/* DOTS */}
 
       {count > 1 && (
-        <div className="absolute inset-x-0 bottom-5 flex justify-center gap-1.5 px-4">
+        <div className="absolute inset-x-0 bottom-5 flex justify-center gap-1.5 px-4 lg:bottom-8 lg:right-auto lg:w-[40%] lg:justify-start lg:px-14 xl:px-20">
           {articles.map((article, position) => (
             <button
               key={article._id}
