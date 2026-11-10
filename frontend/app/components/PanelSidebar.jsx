@@ -1,7 +1,10 @@
 "use client";
 
 import Link from "next/link";
+
 import { usePathname } from "next/navigation";
+
+import CollegeLogo from "./CollegeLogo";
 
 import {
   BookOpen,
@@ -233,9 +236,7 @@ export default function PanelSidebar({ panel }) {
       onClick={closeMenu}
       className="flex min-w-0 items-center gap-3"
     >
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-700 text-white shadow-sm">
-        <Newspaper size={21} />
-      </div>
+      <CollegeLogo className="h-12" />
 
       <div className="min-w-0">
         <p className="truncate text-base font-bold tracking-tight text-slate-900">

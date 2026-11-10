@@ -17,6 +17,7 @@ import MagazineTeam from "./components/MagazineTeam";
 import EditorDesk from "./components/EditorDesk";
 import { ArticleModal } from "./components/Article";
 import HeroSlider from "./components/HeroSlider";
+import CollegeLogo from "./components/CollegeLogo";
 import { normalizeArticle } from "./lib/magazineFormat";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -866,14 +867,25 @@ export default function HomePage() {
 
       </section>
 
-<footer className="border-t border-slate-200 bg-white">
-  <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
-    <p className="text-center text-[11px] leading-5 text-slate-400 sm:text-xs">
-      © {new Date().getFullYear()} Karnataka (Govt.) Polytechnic,
-      Mangaluru. KPT E-Magazine.
-    </p>
-  </div>
-</footer>
+      <footer className="border-t border-slate-200 bg-white">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-6 text-center sm:px-6 lg:px-8">
+          <CollegeLogo className="h-16" />
+
+          <div>
+            <p className="text-sm font-bold text-slate-800">
+              Karnataka (Govt.) Polytechnic, Mangaluru
+            </p>
+
+            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-teal-700">
+              Labour is Dignity
+            </p>
+          </div>
+
+          <p className="text-[11px] leading-5 text-slate-400 sm:text-xs">
+            © {new Date().getFullYear()} KPT E-Magazine. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }

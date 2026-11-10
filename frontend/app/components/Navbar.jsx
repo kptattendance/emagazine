@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { getCurrentUser } from "../lib/currentUser";
+import CollegeLogo from "./CollegeLogo";
 import axios from "axios";
 
 import {
@@ -18,7 +19,6 @@ import {
   Home,
   LayoutDashboard,
   Menu,
-  Newspaper,
   X,
 } from "lucide-react";
 
@@ -209,9 +209,7 @@ export default function Navbar() {
           href="/"
           className="flex items-center gap-3"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-700 text-white shadow-sm">
-            <Newspaper size={21} />
-          </div>
+          <CollegeLogo className="h-12" priority />
 
           <div>
             <div className="text-base font-bold tracking-tight text-slate-900">
