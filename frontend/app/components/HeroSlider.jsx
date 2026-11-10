@@ -5,9 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Newspaper } from "lucide-react";
 
 import { formatDate, getDepartmentLabel } from "../lib/magazineFormat";
+import FittedImage from "./FittedImage";
 
 // Seconds each slide stays before the next one slides in
-const SLIDE_SECONDS = 5;
+const SLIDE_SECONDS = 4;
 
 // Finger movement (px) that counts as a swipe
 const SWIPE_DISTANCE = 50;
@@ -101,7 +102,7 @@ export default function HeroSlider({ articles, onRead }) {
       {/* SLIDES */}
 
       <div
-        className="flex h-[62vh] min-h-[340px] max-h-[680px] transition-transform duration-700 ease-out motion-reduce:transition-none"
+        className="flex h-[62vh] min-h-[340px] max-h-[680px] transition-transform duration-500 ease-out motion-reduce:transition-none"
         style={{ transform: `translateX(-${index * 100}%)` }}
       >
         {articles.map((article, position) => (
@@ -115,12 +116,9 @@ export default function HeroSlider({ articles, onRead }) {
             className="relative h-full w-full shrink-0 cursor-pointer text-left"
           >
             {article.eventPhoto ? (
-              <img
+              <FittedImage
                 src={article.eventPhoto}
-                alt=""
-                loading={position === 0 ? "eager" : "lazy"}
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-cover"
+                eager={position === 0}
               />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-teal-700 via-teal-800 to-slate-900">

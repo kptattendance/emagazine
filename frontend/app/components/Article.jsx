@@ -20,6 +20,7 @@ import {
 } from "../lib/magazineFormat";
 
 import ArticleActions from "./ArticleActions";
+import FittedImage from "./FittedImage";
 
 /*
 ============================================================
@@ -260,15 +261,14 @@ export function ArticleModal({
 
             {article.eventPhoto && (
               <div
-                className="relative h-64 cursor-zoom-in overflow-hidden bg-slate-900 sm:h-80"
+                className="relative h-72 cursor-zoom-in overflow-hidden bg-slate-900 sm:h-96"
                 onClick={() => setPreviewImage(article.eventPhoto)}
               >
-                <img
-  loading="lazy"
-  decoding="async"
+                {/* whole photo, never cropped */}
+                <FittedImage
                   src={article.eventPhoto}
                   alt={article.title}
-                  className="h-full w-full object-cover transition duration-300 hover:scale-[1.02]"
+                  eager
                 />
 
                 <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
