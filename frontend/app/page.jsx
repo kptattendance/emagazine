@@ -7,7 +7,6 @@ import {
   ArrowRight,
   BookOpen,
   ChevronDown,
-  Library,
   Search,
 } from "lucide-react";
 
@@ -17,7 +16,7 @@ import { normalizeDepartment } from "./lib/departments";
 import MagazineTeam from "./components/MagazineTeam";
 import EditorDesk from "./components/EditorDesk";
 import { ArticleModal } from "./components/Article";
-import ArticleCarousel from "./components/ArticleCarousel";
+import HeroSlider from "./components/HeroSlider";
 import { normalizeArticle } from "./lib/magazineFormat";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -31,7 +30,7 @@ const TABLE_TYPES = [
 ];
 
 // Most recent articles moving in the home page carousel
-const CAROUSEL_LIMIT = 20;
+const SLIDER_LIMIT = 12;
 
 export default function HomePage() {
   const [articles, setArticles] = useState([]);
@@ -132,7 +131,7 @@ export default function HomePage() {
   }, [articles]);
 
   const feedArticles = useMemo(
-    () => articles.slice(0, CAROUSEL_LIMIT).map(normalizeArticle),
+    () => articles.slice(0, SLIDER_LIMIT).map(normalizeArticle),
     [articles]
   );
 
@@ -328,25 +327,15 @@ export default function HomePage() {
         id="latest"
         className="border-b border-amber-100 bg-gradient-to-b from-amber-50/80 via-white to-white"
       >
-        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        {/* Full-width photo slider of the latest articles */}
+        {!loading && !error && feedArticles.length > 0 && (
+          <HeroSlider
+            articles={feedArticles}
+            onRead={setSelectedArticle}
+          />
+        )}
 
-          <div className="mb-7">
-            <div className="mb-2 flex items-center gap-2 text-amber-700">
-              <Library size={17} />
-
-              <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] sm:text-xs">
-                KPT E-Magazine
-              </p>
-            </div>
-
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl lg:text-4xl">
-              Latest from the Magazine
-            </h1>
-
-            <p className="mt-1.5 text-sm text-slate-500 sm:text-base">
-              Tap any article to read, like and share it. Hover or touch to pause.
-            </p>
-          </div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
 
           {loading ? (
             <div className="rounded-2xl border border-amber-200 bg-white px-5 py-12 text-center shadow-sm">
@@ -373,22 +362,19 @@ export default function HomePage() {
               </p>
             </div>
           ) : (
-            <>
-              <ArticleCarousel
-                articles={feedArticles}
-                onRead={setSelectedArticle}
-              />
+            <div className="flex flex-col items-center gap-2 text-center">
+              <p className="text-sm text-slate-500">
+                Tap a picture to read the article, like it and share it.
+              </p>
 
-              <div className="mt-6 flex justify-center">
-                <Link
-                  href="/magazine"
-                  className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
-                >
-                  View all {feedArticles.length} articles
-                  <ArrowRight size={16} />
-                </Link>
-              </div>
-            </>
+              <Link
+                href="/magazine"
+                className="inline-flex items-center gap-2 rounded-xl bg-teal-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-800"
+              >
+                View all {articles.length} articles
+                <ArrowRight size={16} />
+              </Link>
+            </div>
           )}
 
           {/* BROWSE BY ISSUE */}
